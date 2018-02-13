@@ -1,5 +1,5 @@
-source("http://bioconductor.org/biocLite.R")
-biocLite(c("graph", "Rgraphviz"))
+#source("http://bioconductor.org/biocLite.R")
+#biocLite(c("graph", "Rgraphviz"))
 library(stats) 
 library(caret)
 library(gdata)
@@ -24,6 +24,13 @@ datos.modelo <- subset(CRASH_data_1, select =
                            PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_1.or.more.PH,
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
                            EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,GOS5    ))
+#Si ha habido escaner
+datos.modelo1 <- subset(CRASH_data_1, select = 
+                         c(EO_1.or.more.PH,
+                           EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
+                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan   ))
+
+
 #datos.modelo[datos.modelo$AGE == -1, ]
 
 #nrow(datos.modelo) Tenemos 10008 pacientes
@@ -49,6 +56,13 @@ if(TRUE){
   #factor(datos.modelo$EO_Major.EC.injury)
   
 }
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "3" #no response 
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="3" & datos.modelo$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
+factor(datos.modelo$pupils)
+
 
 
 #datos.modelo=na.omit(datos.modelo$GOS5)
@@ -60,13 +74,22 @@ sapply(datos.modelo, function(x) length(unique(x)))
 missmap(datos.modelo, main = "Missing values vs observed")
 NROW(datos.modelo )
 
+#***********************************************************************************
+# Nombre: MODELO COMPLETO
+# Descripción:  
+# Autor:                      Fecha:              Modificación:     
+# Modificación: 
+# ***********************************************************************************
+
 data_train <- datos.modelo[1:3581, ]
 data_test <- datos.modelo[3582:NROW(datos.modelo ), ]
 
 
-fit <- glm(GOS5 ~ SEX + AGE+GCS_EYE+GCS_MOTOR+
-             GCS_VERBAL+PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT+
-             EO_1.or.more.PH+EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,data=data_train,family = binomial(link="logit"))
+fit <- glm(GOS5 ~SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
+             PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT+EO_1.or.more.PH+
+             EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+
+             EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,
+           data=data_train,family = binomial(link="logit"))
 summary(fit) # show results
 
 #CROSS VALIDATION
@@ -115,42 +138,53 @@ AUC
 
 text(0.4, 0.6, paste(AUC@y.name, "\n", round(unlist(AUC@y.values), 3)), cex = 0.7)
 
+#***********************************************************************************
+# Nombre: MODELO 1
+# Descripción:  
+# Autor:                      Fecha:              Modificación:     
+# Modificación: 
+# ***********************************************************************************
 
-#ROC
-preds=predict(fit)
-rocP<-roc(GOS5 ~ SEX + SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
-          PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT+EO_1.or.more.PH+
-          EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+
-          EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,data=datos.modelo,levels=base::levels(as.factor(datos.modelo$GOS5)))
-plot.roc(GOS5 ~  SEX + SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
+data_train <- datos.modelo[1:3581, ]
+data_test <- datos.modelo[3582:NROW(datos.modelo ), ]
+
+
+fit <- glm(GOS5 ~ SEX+AGE+EO_Cause+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
            PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT+EO_1.or.more.PH+
            EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+
-           EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,data=datos.modelo,levels=base::levels(as.factor(datos.modelo$GOS5)))
-#roc(GOS5 ~ SEX + AGE+GCS_EYE+GCS_MOTOR+GCS_VERBAL+PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT,data=datos.modelo, smooth=TRUE)
-#auc(rocP, partial.auc=FALSE, partial.auc.focus=c("specificity","sensitivity"), partial.auc.correct=FALSE,allow.invalid.partial.auc.correct = FALSE)
+           EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,data=data_train,family = binomial(link="logit"))
+summary(fit) # show results
+
+
+#ANOVA
+anova(fit, test = 'Chisq')
+
+NagelkerkeR2(fit)
+
+
 
 
 #BLEARN
- head(datos.modelo, n = 4)
- datos.modelo$SEX <- factor(datos.modelo$SEX)
- datos.modelo$AGE <- factor(datos.modelo$AGE)
- datos.modelo$EO_Cause <- factor(datos.modelo$EO_Cause)
- datos.modelo$EO_Major.EC.injury <- factor(datos.modelo$EO_Major.EC.injury)
- datos.modelo$GCS_EYE <- factor(datos.modelo$GCS_EYE)
- datos.modelo$GCS_MOTOR <- factor(datos.modelo$GCS_MOTOR)
- datos.modelo$GCS_VERBAL <- factor(datos.modelo$GCS_VERBAL)
- datos.modelo$PUPIL_REACT_LEFT <- factor(datos.modelo$PUPIL_REACT_LEFT)
- datos.modelo$PUPIL_REACT_RIGHT <- factor(datos.modelo$PUPIL_REACT_RIGHT)
- datos.modelo$EO_1.or.more.PH <- factor(datos.modelo$EO_1.or.more.PH)
- datos.modelo$EO_Subarachnoid.bleed <- factor(datos.modelo$EO_Subarachnoid.bleed)
- datos.modelo$EO_Obliteration.3rdVorBC <- factor(datos.modelo$EO_Obliteration.3rdVorBC)
- datos.modelo$EO_Midline.shift..5mm <- factor(datos.modelo$EO_Midline.shift..5mm)
- datos.modelo$EO_Non.evac.haem <- factor(datos.modelo$EO_Non.evac.haem)
- datos.modelo$EO_Evac.haem <- factor(datos.modelo$EO_Evac.haem)
+ #head(datos.modelo, n = 4)
+ #datos.modelo$SEX <- factor(datos.modelo$SEX)
+ #datos.modelo$AGE <- factor(datos.modelo$AGE)
+ #datos.modelo$EO_Cause <- factor(datos.modelo$EO_Cause)
+ #datos.modelo$EO_Major.EC.injury <- factor(datos.modelo$EO_Major.EC.injury)
+ #datos.modelo$GCS_EYE <- factor(datos.modelo$GCS_EYE)
+ #datos.modelo$GCS_MOTOR <- factor(datos.modelo$GCS_MOTOR)
+ #datos.modelo$GCS_VERBAL <- factor(datos.modelo$GCS_VERBAL)
+ #datos.modelo$PUPIL_REACT_LEFT <- factor(datos.modelo$PUPIL_REACT_LEFT)
+ #datos.modelo$PUPIL_REACT_RIGHT <- factor(datos.modelo$PUPIL_REACT_RIGHT)
+ #datos.modelo$EO_1.or.more.PH <- factor(datos.modelo$EO_1.or.more.PH)
+ #datos.modelo$EO_Subarachnoid.bleed <- factor(datos.modelo$EO_Subarachnoid.bleed)
+ #datos.modelo$EO_Obliteration.3rdVorBC <- factor(datos.modelo$EO_Obliteration.3rdVorBC)
+ #datos.modelo$EO_Midline.shift..5mm <- factor(datos.modelo$EO_Midline.shift..5mm)
+ #datos.modelo$EO_Non.evac.haem <- factor(datos.modelo$EO_Non.evac.haem)
+ #datos.modelo$EO_Evac.haem <- factor(datos.modelo$EO_Evac.haem)
  #print(iamb(datos.modelo))
  #print(hc(datos.modelo))
 
- net.data <- bn.fit(hc(datos.modelo), datos.modelo)
- class(net.data)
- graphviz.plot(net.data, shape = "ellipse")
+ #net.data <- bn.fit(hc(datos.modelo), datos.modelo)
+ #class(net.data)
+ #graphviz.plot(net.data, shape = "ellipse")
  
