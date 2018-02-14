@@ -16,20 +16,76 @@ library(ROCR)
 library(Metrics)
 
 #cat("\014") 
-CRASH_data_1 <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/CRASH_data-1.csv")
+rm(list = ls())
+CRASH_data_1 <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/CRASH_data-1.csv",na.strings=c("","NA"))
 
 #View(CRASH_data_1)
 datos.modelo <- subset(CRASH_data_1, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
                            PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_1.or.more.PH,
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
-                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,GOS5    ))
-#Si ha habido escaner
-datos.modelo1 <- subset(CRASH_data_1, select = 
-                         c(EO_1.or.more.PH,
-                           EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
-                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan   ))
+                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan,GOS5,GOS8,EO_Outcome))
+#datos.modelo <- datos.modelo[datos.modelo$EO_Head.CT.scan=="1",]
 
+#NROW(which(datos.modelo$GOS5=="1"))
+
+
+
+#***********************************************************************************
+# Nombre: PREPARACION DE DATOS
+# Descripción:  
+# Autor:                      Fecha:              Modificación:     
+# Modificación: 
+# ***********************************************************************************
+
+#Preparamos la variable de outcome
+datos.modelo$outcome<-NA
+datos.modelo$outcome[which(!is.na(datos.modelo$GOS5))]<-as.character(datos.modelo$GOS5[which(!is.na(datos.modelo$GOS5))])
+datos.modelo$outcome[which(!is.na(datos.modelo$GOS8))]<-as.character(datos.modelo$GOS8[which(!is.na(datos.modelo$GOS8))])
+datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1")] <- "D"
+
+
+
+#datos.modelo$GOS5 <- as.character(datos.modelo$GOS5)
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="D")] <- "0"
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="SD")] <- "0"
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="SD*")] <- "0"
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="GR*")] <- "1"
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="GR")] <- "1"
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="MD*")] <- "1"
+#datos.modelo$GOS5[which(datos.modelo$GOS5=="MD")] <- "1"
+#datos.modelo$GOS5 <- as.numeric(datos.modelo$GOS5)
+
+
+#datos.modelo$GOS8 <- as.character(datos.modelo$GOS8)
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="GR-")] <- "1"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="GR+")] <- "1"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="MD-")] <- "1"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="MD+")] <- "1"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="SD-")] <- "0"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="SD*")] <- "0"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="SD+")] <- "0"
+#datos.modelo$GOS8[which(datos.modelo$GOS8=="D")] <- "0"
+#datos.modelo$GOS8 <- as.numeric(datos.modelo$GOS8)
+
+#factor(datos.modelo$GOS8)
+
+
+#Creamos una columna con la union de las pupilas
+datos.modelo$pupils<-NA
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "3" #no response 
+datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="3" & datos.modelo$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
+factor(datos.modelo$pupils)
+
+
+#Eliminamos las variables que no necesitemos
+
+
+#Borramos todos los NA
+datos.modelo<-na.omit(datos.modelo)
 
 #datos.modelo[datos.modelo$AGE == -1, ]
 
@@ -42,7 +98,7 @@ if(TRUE){
   #NROW(datos.modelo)
   #datos.modelo <- datos.modelo[!is.na(datos.modelo$EO_Major.EC.injury),]
   #NROW(datos.modelo)
-  datos.modelo <- datos.modelo[datos.modelo$GOS5!="",]
+  #datos.modelo <- datos.modelo[datos.modelo$GOS5!="",]
   NROW(datos.modelo)
   datos.modelo$GOS5 <- as.character(datos.modelo$GOS5)
   datos.modelo$GOS5[which(datos.modelo$GOS5=="D")] <- "0"
@@ -54,21 +110,14 @@ if(TRUE){
   datos.modelo$GOS5[which(datos.modelo$GOS5=="MD")] <- "1"
   datos.modelo$GOS5 <- as.numeric(datos.modelo$GOS5)
   #factor(datos.modelo$EO_Major.EC.injury)
-  
 }
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "3" #no response 
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="3" & datos.modelo$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
-factor(datos.modelo$pupils)
-
 
 
 #datos.modelo=na.omit(datos.modelo$GOS5)
 NROW(datos.modelo)
-
+datos.modelo<-na.omit(datos.modelo)
 #Vemos los valores nulos de cada variable
+
 sapply(datos.modelo,function(x) sum(is.na(x)))
 sapply(datos.modelo, function(x) length(unique(x)))
 missmap(datos.modelo, main = "Missing values vs observed")
@@ -86,7 +135,7 @@ data_test <- datos.modelo[3582:NROW(datos.modelo ), ]
 
 
 fit <- glm(GOS5 ~SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
-             PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT+EO_1.or.more.PH+
+             pupils+EO_1.or.more.PH+
              EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+
              EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,
            data=data_train,family = binomial(link="logit"))
@@ -95,7 +144,7 @@ summary(fit) # show results
 #CROSS VALIDATION
 set.seed(1337)
 #Fit a logistic model using default and income values
-glm.fit <- glm(GOS5 ~ SEX+ AGE+GCS_EYE+GCS_MOTOR+GCS_VERBAL+PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT ,data=datos.modelo,family = binomial)
+glm.fit <- glm(GOS5 ~ SEX+ AGE+GCS_EYE+GCS_MOTOR+GCS_VERBAL+pupils ,data=datos.modelo,family = binomial)
 # Create a vector with three blank values
 cv.error <- rep(0,3)
 
@@ -150,7 +199,7 @@ data_test <- datos.modelo[3582:NROW(datos.modelo ), ]
 
 
 fit <- glm(GOS5 ~ SEX+AGE+EO_Cause+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
-           PUPIL_REACT_LEFT+PUPIL_REACT_RIGHT+EO_1.or.more.PH+
+             pupils+EO_1.or.more.PH+
            EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+
            EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,data=data_train,family = binomial(link="logit"))
 summary(fit) # show results
