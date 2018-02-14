@@ -24,10 +24,10 @@ datos.modelo <- subset(CRASH_data_1, select =
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
                            PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_1.or.more.PH,
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
-                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan,GOS5,GOS8,EO_Outcome))
-#datos.modelo <- datos.modelo[datos.modelo$EO_Head.CT.scan=="1",]
+                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan,EO_Outcome,EO_Symptoms,TH_Outcome,TH_Symptoms,GOS5,GOS8))
 
-#NROW(which(datos.modelo$GOS5=="1"))
+#datos.modelo<-datos.modelo$EO_Outcome[which(is.na(datos.modelo$EO_Outcome))]
+#NROW(which(is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)))
 
 
 
@@ -42,8 +42,72 @@ datos.modelo <- subset(CRASH_data_1, select =
 datos.modelo$outcome<-NA
 datos.modelo$outcome[which(!is.na(datos.modelo$GOS5))]<-as.character(datos.modelo$GOS5[which(!is.na(datos.modelo$GOS5))])
 datos.modelo$outcome[which(!is.na(datos.modelo$GOS8))]<-as.character(datos.modelo$GOS8[which(!is.na(datos.modelo$GOS8))])
+datos.modelo$outcome[is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)]<-"NODATA"
+
+#Si el Outcome es 1, el paciente fallece
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Outcome=="1")]<-"D"
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Outcome=="1")]<-"D"
+
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Outcome=="4")]<-"GR"
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Outcome=="4")]<-"GR"
+
+
+
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="5")]<-"ALIVE"
 datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1")] <- "D"
 
+#Si los sintomas son 6, eso significa que han fallecido
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="6")]<-"D"  
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="6")]<-"D"
+
+
+#Si los sintomas son 9 (Se sabe que va a vivir hasta los 9 meses), indicamos que son Alive)
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="9")]<-"ALIVE" 
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="9")]<-"ALIVE"
+
+
+#Suponemos que el outcome con valor 3, se da de alta y se queda ALIVE
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="3")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="3")]<-"ALIVE"
+
+
+
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="3" & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="3" & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"
+
+
+#Si los sintomas son 1,2,3,4,5 suponemos que el paciente sigue vivo. Pero no se ha obtenido ningun resultado concreto
+#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & (datos.modelo$EO_Symptoms=="1" | datos.modelo$EO_Symptoms=="2" | datos.modelo$EO_Symptoms=="3"| datos.modelo$EO_Symptoms=="4"| datos.modelo$EO_Symptoms=="5"))]<-"ALIVE"
+#datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="2")]<-"ALIVE"
+#datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="2")]<-"ALIVE"
+
+#Si el GOS6 y GOS8 son nulos, entonces los sacamos fuera de los que estan bien
+#datos.modelo$outcome[which(is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8))]<-NA
+
+datos.modelo$outcome[which(datos.modelo$outcome=="D")] <- "D"
+datos.modelo$outcome[which(datos.modelo$outcome=="SD")] <- "D"
+datos.modelo$outcome[which(datos.modelo$outcome=="SD-")] <- "D"
+datos.modelo$outcome[which(datos.modelo$outcome=="SD*")] <- "D"
+datos.modelo$outcome[which(datos.modelo$outcome=="SD+")] <- "D"
+datos.modelo$outcome[which(datos.modelo$outcome=="GR")] <- "MDGR"
+datos.modelo$outcome[which(datos.modelo$outcome=="GR-")] <- "MDGR"
+datos.modelo$outcome[which(datos.modelo$outcome=="GR+")] <- "MDGR"
+datos.modelo$outcome[which(datos.modelo$outcome=="MD")] <- "MDGR"
+datos.modelo$outcome[which(datos.modelo$outcome=="MD-")] <- "MDGR"
+datos.modelo$outcome[which(datos.modelo$outcome=="MD+")] <- "MDGR"
+#datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE")] <- "ALIVE"
+factor(datos.modelo$outcome)
+
+datos.modelo1<-subset(datos.modelo, outcome == "NODATA")
+datos.modeloALIVE<-subset(datos.modelo, outcome == "ALIVE")
+datos.modeloDEATH<-subset(datos.modelo, outcome == "D")
+datos.modeloMDGR<-subset(datos.modelo, outcome == "MDGR")
+#NROW(which(is.na(datos.modelo3$GOS5)&is.na(datos.modelo3$GOS8)))
+datos.modelo <- datos.modelo[is.na(datos.modelo$outcome),]
+
+
+
+#datos.modelo <- datos.modelo[!is.na(datos.modelo$GOS5)&!is.na(datos.modelo$GOS8)&!is.na(datos.modelo$EO_Outcome)&!is.na(datos.modelo$TH_Outcome),]
 
 
 #datos.modelo$GOS5 <- as.character(datos.modelo$GOS5)
@@ -82,7 +146,15 @@ factor(datos.modelo$pupils)
 
 
 #Eliminamos las variables que no necesitemos
+datos.modelo <- subset(datos.modelo, select = 
+                         c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
+                           pupils,EO_1.or.more.PH,
+                           EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
+                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan,outcome))
 
+#datos.modelo <- datos.modelo[datos.modelo$EO_Head.CT.scan=="1",]
+datos.modelo <- datos.modelo[!is.na(datos.modelo$outcome),]
+#datos.modelo <- datos.modelo[!is.na(datos.modelo$outcome),]
 
 #Borramos todos los NA
 datos.modelo<-na.omit(datos.modelo)
