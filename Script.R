@@ -42,47 +42,84 @@ datos.modelo <- subset(CRASH_data_1, select =
 datos.modelo$outcome<-NA
 datos.modelo$outcome[which(!is.na(datos.modelo$GOS5))]<-as.character(datos.modelo$GOS5[which(!is.na(datos.modelo$GOS5))])
 datos.modelo$outcome[which(!is.na(datos.modelo$GOS8))]<-as.character(datos.modelo$GOS8[which(!is.na(datos.modelo$GOS8))])
+
+
+#datos.modelo$outcome[is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)&is.na(datos.modelo$EO_Outcome)&is.na(datos.modelo$TH_Outcome)]<-"NODATA"
 datos.modelo$outcome[is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)]<-"NODATA"
 
-#Si el Outcome es 1, el paciente fallece
-datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Outcome=="1")]<-"D"
-datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Outcome=="1")]<-"D"
-
-datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Outcome=="4")]<-"GR"
-datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Outcome=="4")]<-"GR"
+#Si el Outcome es 1 o los sintomas son 6, el paciente fallece
+datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1"|| datos.modelo$EO_Symptoms=="6")]<-"D"
+datos.modelo$outcome[which(datos.modelo$TH_Outcome=="1"|| datos.modelo$TH_Symptoms=="6")]<-"D"
 
 
+#Si tiene algun sintoma de 4 y 5 (totalmente dependiente), se considera como fallecido
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & (datos.modelo$EO_Symptoms=="5"|| datos.modelo$EO_Symptoms=="4"))]<-"D"  
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & (datos.modelo$TH_Symptoms=="4"|| datos.modelo$TH_Symptoms=="4"))]<-"D" 
 
-datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="5")]<-"ALIVE"
+
+#Si tiene algun sintoma de 1 y 2, se considera como vivo
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"  
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="1")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="2")]<-"ALIVE"  
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="2")]<-"ALIVE"
+
+#datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="5")]<-"ALIVE"
 datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1")] <- "D"
 
-#Si los sintomas son 6, eso significa que han fallecido
-datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="6")]<-"D"  
-datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="6")]<-"D"
 
+
+#Si los fallecidos no tienen estado, los metemos en la lista de nodata
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)&(datos.modelo$EO_Symptoms=="1"|datos.modelo$TH_Symptoms=="1"))]<-"NODATA" 
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)&(datos.modelo$EO_Symptoms=="2"|datos.modelo$TH_Symptoms=="2"))]<-"NODATA"
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)&(datos.modelo$EO_Symptoms=="3"|datos.modelo$TH_Symptoms=="3"))]<-"NODATA" 
+
+#Si los sintomas son 6, eso significa que han fallecido
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="6")]<-"D"  
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="6")]<-"D"
+
+#Si el TH_OUTCOME es de 5 y no se ha obtenido ningun GOS5 o GOS8 y esta en modo fallecido
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5)& is.na(datos.modelo$GOS8) &(datos.modelo$TH_Outcome=="5"|datos.modelo$EO_Outcome=="5"))]<-"NODATA" 
 
 #Si los sintomas son 9 (Se sabe que va a vivir hasta los 9 meses), indicamos que son Alive)
 datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="9")]<-"ALIVE" 
 datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="9")]<-"ALIVE"
 
+#datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$EO_Outcome=="6")]<-"D"
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$TH_Outcome=="5")]<-"NODATA"
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$EO_Outcome=="5")]<-"NODATA"
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$EO_Outcome=="2")]<-"NODATA"
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$TH_Outcome=="2")]<-"NODATA"
 
-#Suponemos que el outcome con valor 3, se da de alta y se queda ALIVE
-datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="3")]<-"ALIVE"
-datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="3")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="4")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="4")]<-"ALIVE"
 
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$EO_Symptoms=="5")]<-"D"
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & datos.modelo$TH_Symptoms=="5")]<-"D"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="5")]<-"D"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="5")]<-"D"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Symptoms=="4")]<-"D"
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="4")]<-"D"
 
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             (datos.modelo$TH_Symptoms=="1"))]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             (datos.modelo$TH_Symptoms=="2"))]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             (datos.modelo$TH_Symptoms=="3"))]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             (datos.modelo$TH_Symptoms=="9"))]<-"ALIVE"
 
-datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="3" & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"
-datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="3" & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             datos.modelo$EO_Symptoms=="4" & is.na(datos.modelo$TH_Symptoms))]<-"NODATA"
 
+#Eliminar datos anomalos de D
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             datos.modelo$EO_Symptoms=="9" )]<-"NODATA"
 
-#Si los sintomas son 1,2,3,4,5 suponemos que el paciente sigue vivo. Pero no se ha obtenido ningun resultado concreto
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & (datos.modelo$EO_Symptoms=="1" | datos.modelo$EO_Symptoms=="2" | datos.modelo$EO_Symptoms=="3"| datos.modelo$EO_Symptoms=="4"| datos.modelo$EO_Symptoms=="5"))]<-"ALIVE"
-#datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$EO_Outcome=="2")]<-"ALIVE"
-#datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Outcome=="2")]<-"ALIVE"
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)&
+                             datos.modelo$EO_Symptoms=="9" )]<-"NODATA"
 
-#Si el GOS6 y GOS8 son nulos, entonces los sacamos fuera de los que estan bien
-#datos.modelo$outcome[which(is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8))]<-NA
+datos.modelo$outcome[which(datos.modelo$outcome=="D" & datos.modelo$GOS5=="GR" )]<-"GR"
 
 datos.modelo$outcome[which(datos.modelo$outcome=="D")] <- "D"
 datos.modelo$outcome[which(datos.modelo$outcome=="SD")] <- "D"
@@ -98,12 +135,16 @@ datos.modelo$outcome[which(datos.modelo$outcome=="MD+")] <- "MDGR"
 #datos.modelo$outcome[which(datos.modelo$outcome=="ALIVE")] <- "ALIVE"
 factor(datos.modelo$outcome)
 
-datos.modelo1<-subset(datos.modelo, outcome == "NODATA")
-datos.modeloALIVE<-subset(datos.modelo, outcome == "ALIVE")
-datos.modeloDEATH<-subset(datos.modelo, outcome == "D")
-datos.modeloMDGR<-subset(datos.modelo, outcome == "MDGR")
+
+
+datos.modeloNODATA<-subset(datos.modelo, outcome == "NODATA")
+datos.modeloALIVE<-subset(datos.modelo, outcome == "ALIVE" )
+datos.modeloDEATH<-subset(datos.modelo, outcome == "D")#& EO_Symptoms!="6" & TH_Symptoms!="6" & EO_Outcome!="1" & is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8) )
+datos.modeloMDGR<-subset(datos.modelo, outcome == "MDGR") 
+factor(datos.modeloMDGR$TH_Symptoms)
 #NROW(which(is.na(datos.modelo3$GOS5)&is.na(datos.modelo3$GOS8)))
 datos.modelo <- datos.modelo[is.na(datos.modelo$outcome),]
+
 
 
 
