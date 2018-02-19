@@ -22,9 +22,11 @@ CRASH_data_1 <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/CRASH_da
 #View(CRASH_data_1)
 datos.modelo <- subset(CRASH_data_1, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
-                           PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_1.or.more.PH,
+                           PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_Head.CT.scan,EO_1.or.more.PH,
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
-                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan,EO_Outcome,EO_Symptoms,TH_Outcome,TH_Symptoms,GOS5,GOS8))
+                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Outcome,
+                           EO_Symptoms,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
+                           TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,GOS5,GOS8))
 
 #datos.modelo<-datos.modelo$EO_Outcome[which(is.na(datos.modelo$EO_Outcome))]
 #NROW(which(is.na(datos.modelo$GOS5)&is.na(datos.modelo$GOS8)))
@@ -32,7 +34,7 @@ datos.modelo <- subset(CRASH_data_1, select =
 
 
 #***********************************************************************************
-# Nombre: PREPARACION DE DATOS
+# Nombre: PREPARACION DE DATOS. FASE 1
 # Descripción:  
 # Autor:                      Fecha:              Modificación:     
 # Modificación: 
@@ -51,29 +53,11 @@ datos.modelo$outcome[which(datos.modelo$TH_Outcome=="1")]<-"D"
 datos.modelo$outcome[which(datos.modelo$TH_Symptoms=="6")]<-"D"
 
 
-
-#Si tiene algun sintoma de 4 y 5 (totalmente dependiente), se considera como fallecido
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="5")]<-"D"  
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="4")]<-"D" 
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="5")]<-"D" 
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="4")]<-"D" 
-
-
-#Si tiene algun sintoma de 1 y 2, se considera como vivo
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"  
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="1")]<-"ALIVE"
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="2")]<-"ALIVE"  
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="2")]<-"ALIVE"
-
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="4")]<-"D"
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="4" & is.na(datos.modelo$TH_Symptoms))]<-"D"
-
-#Si tienen Outcome 4 o 5 y synthom 1 en el TH, entonces estan vivos y sin resultados finales
-#datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Outcome=="5" & datos.modelo$TH_Symptoms=="1")]<-"ALIVE"
+#Si tienen Outcome 4 y synthom 1 en el TH, entonces estan vivos y sin resultados finales
 datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Outcome=="4" & datos.modelo$TH_Symptoms=="1")]<-"ALIVE"
 datos.modelo$outcome[which(is.na(datos.modelo$outcome) & is.na(datos.modelo$TH_Symptoms)& is.na(datos.modelo$TH_Outcome) & datos.modelo$EO_Outcome=="4" & datos.modelo$EO_Symptoms=="1")]<-"ALIVE"
 
-#Los que no tengan datos, deberan tener los sintomas a null
+#Los que no tengan datos sobre los sintomas, deberan estar en NODATA
 datos.modelo$outcome[which(is.na(datos.modelo$outcome) & is.na(datos.modelo$TH_Symptoms)& is.na(datos.modelo$EO_Symptoms))]<-"NODATA"
 #Los que se hayan transferido a otro hospital y en dicho hospital no se tengan datos
 datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Outcome=="2" & is.na(datos.modelo$TH_Outcome))]<-"NODATA"  
@@ -84,6 +68,14 @@ datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptom
 datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="5"& is.na(datos.modelo$TH_Outcome))]<-"D"
 datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="4"& is.na(datos.modelo$TH_Outcome))]<-"D"
 
+#Si el outcome es de 4 (alta) y el sintoma es de 9, entonces esta vivo, pero no tenemos resultados
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Outcome=="4" & datos.modelo$EO_Symptoms=="9"& is.na(datos.modelo$TH_Symptoms)& is.na(datos.modelo$TH_Outcome))]<-"ALIVE"
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$TH_Symptoms=="9")]<-"ALIVE"
+datos.modelo$outcome[which(is.na(datos.modelo$outcome) & datos.modelo$EO_Symptoms=="9")]<-"ALIVE"
+
+#Se han visto 3 elementos de NODATA, cuyos pacientes obtienen un estado de symptoma 4, 
+#por lo que se envia a estado de fallecido, son datos anomalos.
+datos.modelo$outcome[which(datos.modelo$outcome=="NODATA" & datos.modelo$TH_Symptoms=="4")]<-"D"
 
 datos.modelo$outcome[which(datos.modelo$outcome=="D")] <- "D"
 datos.modelo$outcome[which(datos.modelo$outcome=="SD")] <- "D"
@@ -107,38 +99,130 @@ datos.modeloDEATH<-subset(datos.modelo, outcome == "D")
 datos.modeloMDGR<-subset(datos.modelo, outcome == "MDGR") 
 factor(datos.modeloMDGR$TH_Symptoms)
 #NROW(which(is.na(datos.modelo3$GOS5)&is.na(datos.modelo3$GOS8)))
-datos.modelo <- datos.modelo[is.na(datos.modelo$outcome),]
+#datos.modelo <- datos.modelo[is.na(datos.modelo$outcome),]
+
+#***********************************************************************************
+# Nombre: PREPARACION DE DATOS. FASE 2
+# Descripción:  
+# Autor:                      Fecha:              Modificación:     
+# Modificación: 
+# ***********************************************************************************
+#Si no tenemos datos de los scanner, los eliminamos.
+datos.modelo$outcome[which(datos.modelo$outcome == "MDGR" & datos.modelo$EO_Head.CT.scan=="1")]<-"SCANEADO"
+datos.modelo$outcome[which(datos.modelo$outcome == "MDGR" & datos.modelo$EO_Head.CT.scan=="2")]<-"NOSCANEADO"
+datos.modelo$outcome[which(datos.modelo$outcome == "MDGR" & is.na(datos.modelo$EO_Head.CT.scan))]<-"NOSCANEADO"
 
 
+datos.modelo$outcome[which(datos.modelo$outcome == "SCANEADO" 
+                           & is.na(datos.modelo$EO_1.or.more.PH)
+                           & is.na(datos.modelo$EO_Subarachnoid.bleed)
+                           & is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                           & is.na(datos.modelo$EO_Midline.shift..5mm)
+                           & is.na(datos.modelo$EO_Non.evac.haem)
+                           & is.na(datos.modelo$EO_Evac.haem)
+)]<-"ENANALISIS"
+
+datos.modelo$outcome[which(datos.modelo$outcome == "SCANEADO" 
+                           & datos.modelo$EO_Outcome=="2"
+                           & is.na(datos.modelo$TH_1.or.more.PH)
+                           & is.na(datos.modelo$TH_Subarachnoid.bleed)
+                           & is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                           & is.na(datos.modelo$TH_Midline.shift..5mm)
+                           & is.na(datos.modelo$TH_Non.evac.haem)
+                           & is.na(datos.modelo$TH_Evac.haem)
+)]<-"ENANALISIS"
+
+datos.modelo$outcome[which(datos.modelo$outcome == "NOSCANEADO" 
+                           & datos.modelo$EO_Outcome=="2"
+                           & !is.na(datos.modelo$TH_1.or.more.PH)
+                           & !is.na(datos.modelo$TH_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$TH_Midline.shift..5mm)
+                           & !is.na(datos.modelo$TH_Non.evac.haem)
+                           & !is.na(datos.modelo$TH_Evac.haem)
+                          
+)]<-"SCANEADO"
+
+#Eliminamos los que no tengan el EC Injury en el TH
+datos.modelo$outcome[which(datos.modelo$outcome == "SCANEADO"  & datos.modelo$EO_Outcome=="2" & is.na(datos.modelo$TH_Major.EC.injury))]<-"ENANALISIS"
+#Eliminamos los que no tengan el EC Injury en el EO
+datos.modelo$outcome[which(datos.modelo$outcome == "SCANEADO"  & is.na(datos.modelo$EO_Major.EC.injury))]<-"ENANALISIS"
+
+#Nos hemos dado cuenta que existen datos anomalos, que contienen varios escaneres, pero sin embargo, no se indica como
+#escaneado, son los registros: 2628,3276,3279,8469,8655, etc. (En total son 12)
+datos.modelo$EO_Head.CT.scan[which(datos.modelo$outcome == "NOSCANEADO"  
+                           & !is.na(datos.modelo$EO_1.or.more.PH)
+                           & !is.na(datos.modelo$EO_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$EO_Midline.shift..5mm)
+                           & !is.na(datos.modelo$EO_Non.evac.haem)
+                           & !is.na(datos.modelo$EO_Evac.haem)
+)]<-"1"
+datos.modelo$outcome[which(datos.modelo$outcome == "NOSCANEADO"  
+                           & !is.na(datos.modelo$EO_1.or.more.PH)
+                           & !is.na(datos.modelo$EO_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$EO_Midline.shift..5mm)
+                           & !is.na(datos.modelo$EO_Non.evac.haem)
+                           & !is.na(datos.modelo$EO_Evac.haem)
+                           )]<-"SCANEADO"
+#Nos hemos dado cuenta que existen datos anomalos, que no contienen completamente la variable de scanner a 2,
+#se contiene la variable de TH (han sido mandados a otro hospital) y las todas las variables del scanner
+#se encuentran en NA, por lo tanto se ha decidido poner la variable de CT.Scan a 2, e interpretar que no se realizaron
+#los escaneres
+datos.modelo$TH_Head.CT.scan[which(datos.modelo$outcome == "ENANALISIS"  
+                                   & !is.na(datos.modelo$EO_Cause) 
+                                   & !is.na(datos.modelo$EO_Major.EC.injury)
+                                   & !is.na(datos.modelo$TH_Major.EC.injury)
+)]<-"2"
+
+datos.modelo$outcome[which(datos.modelo$outcome == "ENANALISIS"  
+                                   & !is.na(datos.modelo$EO_Cause) 
+                                   & !is.na(datos.modelo$EO_Major.EC.injury)
+                                   & !is.na(datos.modelo$TH_Major.EC.injury)
+)]<-"SCANEADO"
+
+#Nos hemos encontrado que existen otros datos anomalos, como por ejemplo, que la variable de scaner se encuentre a 1,
+#que significa que se han realizado los scaneres al resto de variables, sin embargo estas variables se encuentran vacias.
+datos.modelo$EO_Head.CT.scan[which(datos.modelo$outcome == "ENANALISIS"  
+                                   & !is.na(datos.modelo$EO_Cause) 
+                                   & !is.na(datos.modelo$EO_Major.EC.injury)
+                                   & datos.modelo$EO_Head.CT.scan=="1"
+                                   & is.na(datos.modelo$EO_1.or.more.PH)
+                                   & datos.modelo$EO_Outcome!="2"
+)]<-"50"
+
+datos.modelo$outcome[which(datos.modelo$outcome == "ENANALISIS"  
+                           & datos.modelo$EO_Head.CT.scan=="50"
+)]<-"SCANEADO"
+datos.modelo$EO_Head.CT.scan[which(datos.modelo$outcome == "SCANEADO"  
+                           & datos.modelo$EO_Head.CT.scan=="50"
+)]<-"2"
+
+datos.modeloSCANEADO<-subset(datos.modelo, outcome == "SCANEADO" )
+datos.modeloNOSCANEADO<-subset(datos.modelo, outcome == "NOSCANEADO" ) 
+datos.modeloENANALISIS<-subset(datos.modelo, outcome == "ENANALISIS" 
+                               #& !is.na(datos.modelo$EO_Cause) 
+                               #& !is.na(datos.modelo$EO_Major.EC.injury)
+                               #& datos.modelo$EO_Head.CT.scan=="1"
+                               #& is.na(datos.modelo$EO_1.or.more.PH)
+                               #& datos.modelo$EO_Outcome!="2"
+                               )
 
 
-#datos.modelo <- datos.modelo[!is.na(datos.modelo$GOS5)&!is.na(datos.modelo$GOS8)&!is.na(datos.modelo$EO_Outcome)&!is.na(datos.modelo$TH_Outcome),]
+#Si hemos trasladado los pacientes a otro hospital, 
+#deberemos verificar si tenemos analisis de escaner y ver los resultados
 
 
-#datos.modelo$GOS5 <- as.character(datos.modelo$GOS5)
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="D")] <- "0"
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="SD")] <- "0"
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="SD*")] <- "0"
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="GR*")] <- "1"
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="GR")] <- "1"
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="MD*")] <- "1"
-#datos.modelo$GOS5[which(datos.modelo$GOS5=="MD")] <- "1"
-#datos.modelo$GOS5 <- as.numeric(datos.modelo$GOS5)
+#Si el major ec injury es nulo, deshechamos los datos
 
 
-#datos.modelo$GOS8 <- as.character(datos.modelo$GOS8)
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="GR-")] <- "1"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="GR+")] <- "1"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="MD-")] <- "1"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="MD+")] <- "1"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="SD-")] <- "0"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="SD*")] <- "0"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="SD+")] <- "0"
-#datos.modelo$GOS8[which(datos.modelo$GOS8=="D")] <- "0"
-#datos.modelo$GOS8 <- as.numeric(datos.modelo$GOS8)
-
-#factor(datos.modelo$GOS8)
-
+#***********************************************************************************
+# Nombre: PREPARACION DE DATOS. FASE 3
+# Descripción:  
+# Autor:                      Fecha:              Modificación:     
+# Modificación: 
+# ***********************************************************************************
 
 #Creamos una columna con la union de las pupilas
 datos.modelo$pupils<-NA
