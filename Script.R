@@ -52,10 +52,8 @@ datos.modelo$outcome[which(!is.na(datos.modelo$GOS8))]<-as.character(datos.model
 
 
 #Si el Outcome es 1 o los sintomas son 6, el paciente fallece
-datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1")]<-"D"
-datos.modelo$outcome[which(datos.modelo$EO_Symptoms=="6")]<-"D"
-datos.modelo$outcome[which(datos.modelo$TH_Outcome=="1")]<-"D"
-datos.modelo$outcome[which(datos.modelo$TH_Symptoms=="6")]<-"D"
+datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1" | datos.modelo$EO_Symptoms=="6" | datos.modelo$TH_Outcome=="1" | datos.modelo$TH_Symptoms=="6")]<-"D"
+
 
 
 #Si tienen Outcome 4 y synthom 1 en el TH, entonces estan vivos y sin resultados finales
@@ -123,7 +121,7 @@ factor(datos.modelo$outcome)
 datos.modelo$ESTADOESCANER<-NA
 
 #Si esta escaneado 1 y no tiene datos de scanner, entonces lo ponemos a scaneado 2
-datos.modelo$EO_Head.CT.scan[which(datos.modelo$outcome == "MDGR" & datos.modelo$EO_Head.CT.scan=="1" 
+datos.modelo$EO_Head.CT.scan[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$EO_Head.CT.scan=="1" 
                                    & is.na(datos.modelo$EO_1.or.more.PH)
                                    & is.na(datos.modelo$EO_Subarachnoid.bleed)
                                    & is.na(datos.modelo$EO_Obliteration.3rdVorBC)
@@ -132,16 +130,8 @@ datos.modelo$EO_Head.CT.scan[which(datos.modelo$outcome == "MDGR" & datos.modelo
                                    & is.na(datos.modelo$EO_Evac.haem)
                                      )]<-"2"
 
-datos.modelo$EO_Head.CT.scan[which(datos.modelo$outcome == "D" & datos.modelo$EO_Head.CT.scan=="1" 
-                                   & is.na(datos.modelo$EO_1.or.more.PH)
-                                   & is.na(datos.modelo$EO_Subarachnoid.bleed)
-                                   & is.na(datos.modelo$EO_Obliteration.3rdVorBC)
-                                   & is.na(datos.modelo$EO_Midline.shift..5mm)
-                                   & is.na(datos.modelo$EO_Non.evac.haem)
-                                   & is.na(datos.modelo$EO_Evac.haem)
-)]<-"2"
 #Lo mismo con TH
-datos.modelo$TH_Head.CT.scan[which(datos.modelo$outcome == "MDGR" & datos.modelo$TH_Head.CT.scan=="1" 
+datos.modelo$TH_Head.CT.scan[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$TH_Head.CT.scan=="1" 
                                    & is.na(datos.modelo$TH_1.or.more.PH)
                                    & is.na(datos.modelo$TH_Subarachnoid.bleed)
                                    & is.na(datos.modelo$TH_Obliteration.3rdVorBC)
@@ -150,32 +140,12 @@ datos.modelo$TH_Head.CT.scan[which(datos.modelo$outcome == "MDGR" & datos.modelo
                                    & is.na(datos.modelo$TH_Evac.haem)
 )]<-"2"
 
-datos.modelo$TH_Head.CT.scan[which(datos.modelo$outcome == "D" & datos.modelo$TH_Head.CT.scan=="1" 
-                                   & is.na(datos.modelo$TH_1.or.more.PH)
-                                   & is.na(datos.modelo$TH_Subarachnoid.bleed)
-                                   & is.na(datos.modelo$TH_Obliteration.3rdVorBC)
-                                   & is.na(datos.modelo$TH_Midline.shift..5mm)
-                                   & is.na(datos.modelo$TH_Non.evac.haem)
-                                   & is.na(datos.modelo$TH_Evac.haem)
-)]<-"2"
 
-datos.modelo$ESTADOESCANER[which(datos.modelo$outcome == "MDGR" & datos.modelo$EO_Head.CT.scan=="1")]<-"SCANEADO"
-datos.modelo$ESTADOESCANER[which(datos.modelo$outcome == "MDGR" & datos.modelo$EO_Head.CT.scan=="2")]<-"NOSCANEADO"
-datos.modelo$ESTADOESCANER[which(datos.modelo$outcome == "MDGR" & is.na(datos.modelo$EO_Head.CT.scan) )]<-"ENANALISIS"
-
-datos.modelo$ESTADOESCANER[which(datos.modelo$outcome == "D" & datos.modelo$EO_Head.CT.scan=="1")]<-"SCANEADO"
-datos.modelo$ESTADOESCANER[which(datos.modelo$outcome == "D" & datos.modelo$EO_Head.CT.scan=="2")]<-"NOSCANEADO"
-datos.modelo$ESTADOESCANER[which(datos.modelo$outcome == "D" & is.na(datos.modelo$EO_Head.CT.scan) )]<-"ENANALISIS"
+datos.modelo$ESTADOESCANER[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$EO_Head.CT.scan=="1")]<-"SCANEADO"
+datos.modelo$ESTADOESCANER[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$EO_Head.CT.scan=="2")]<-"NOSCANEADO"
+datos.modelo$ESTADOESCANER[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & is.na(datos.modelo$EO_Head.CT.scan) )]<-"ENANALISIS"
 
 
-datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" 
-                           & is.na(datos.modelo$EO_1.or.more.PH)
-                           & is.na(datos.modelo$EO_Subarachnoid.bleed)
-                           & is.na(datos.modelo$EO_Obliteration.3rdVorBC)
-                           & is.na(datos.modelo$EO_Midline.shift..5mm)
-                           & is.na(datos.modelo$EO_Non.evac.haem)
-                           & is.na(datos.modelo$EO_Evac.haem)
-)]<-"ENANALISIS"
 
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" 
                            & datos.modelo$EO_Outcome=="2"
@@ -234,23 +204,6 @@ datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "ENANALISIS"
                                    & !is.na(datos.modelo$TH_Major.EC.injury)
 )]<-"SCANEADO"
 
-#Nos hemos encontrado que existen otros datos anomalos, como por ejemplo, que la variable de scaner se encuentre a 1,
-#que significa que se han realizado los scaneres al resto de variables, sin embargo estas variables se encuentran vacias.
-datos.modelo$EO_Head.CT.scan[which(datos.modelo$ESTADOESCANER == "ENANALISIS"  
-                                   & !is.na(datos.modelo$EO_Cause) 
-                                   & !is.na(datos.modelo$EO_Major.EC.injury)
-                                   & datos.modelo$EO_Head.CT.scan=="1"
-                                   & is.na(datos.modelo$EO_1.or.more.PH)
-                                   & datos.modelo$EO_Outcome!="2"
-)]<-"50"
-
-datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "ENANALISIS"  
-                           & datos.modelo$EO_Head.CT.scan=="50"
-)]<-"SCANEADO"
-datos.modelo$EO_Head.CT.scan[which(datos.modelo$ESTADOESCANER == "SCANEADO"  
-                           & datos.modelo$EO_Head.CT.scan=="50"
-)]<-"2"
-
 
 #Eliminamos los que no tengan el EC Injury en el TH
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & datos.modelo$EO_Outcome=="2" & is.na(datos.modelo$TH_Major.EC.injury))]<-"ENANALISIS"
@@ -258,8 +211,7 @@ datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & dat
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & is.na(datos.modelo$EO_Major.EC.injury))]<-"ENANALISIS"
 
 #Comprobamos que no existan variables que contengan nulos
-datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & is.na(datos.modelo$EO_Cause ))]<-"ENANALISIS"
-datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & is.na(datos.modelo$EO_Symptoms))]<-"ENANALISIS"
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Cause ) | is.na(datos.modelo$EO_Symptoms)))]<-"ENANALISIS"
 
 
 scaneadoVIVOS<-subset(datos.modelo, ESTADOESCANER == "SCANEADO" & datos.modelo$outcome == "MDGR")
@@ -269,9 +221,13 @@ scaneadosDEATH<-subset(datos.modelo, ESTADOESCANER == "SCANEADO" & datos.modelo$
 noscaneadoDEATH<-subset(datos.modelo, ESTADOESCANER == "NOSCANEADO" & datos.modelo$outcome == "D") 
 enanalisisDEATH<-subset(datos.modelo, ESTADOESCANER == "ENANALISIS" & datos.modelo$outcome == "D")
 
-                               
+final <- merge(scaneadoVIVOS, scaneadosDEATH, all=TRUE) 
+
+write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINAL.xlsx")                   
 #write.xlsx(scaneadosDEATH, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ESCANEADO_DEATHS.xlsx")
-#write.xlsx(datos.modeloSCANEADO, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ESCANEADO.xlsx")
+#write.xlsx(scaneadoVIVOS, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ESCANEADO.xlsx")
+#write.xlsx(enanalisisDEATH, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ENANALISIS_DEATHS.xlsx")
+#write.xlsx(enalisisVIVOS, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ENANALISIS.xlsx")
 #write.xlsx(datos.modeloNOSCANEADO, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/NOESCANEADO.xlsx")
 #write.xlsx(datos.modeloENANALISIS, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ENANALISIS.xlsx")
 

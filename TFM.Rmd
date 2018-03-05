@@ -54,10 +54,7 @@ head(datos.modelo[,c(17,18,27,28,29,30)])
 #### Cuando las variables de GOS5 y GOS8 **no tienen** datos
 * Si las variables de Outcome contenian el valor de 1 (fallecimiento) o las variables de Symptoms contenian el valor de 6, directamente esas filas del dataset pasaban a clasificarse como fallecidos.
 ```{r ,echo=FALSE}
-datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1")]<-"D"
-datos.modelo$outcome[which(datos.modelo$EO_Symptoms=="6")]<-"D"
-datos.modelo$outcome[which(datos.modelo$TH_Outcome=="1")]<-"D"
-datos.modelo$outcome[which(datos.modelo$TH_Symptoms=="6")]<-"D"
+datos.modelo$outcome[which(datos.modelo$EO_Outcome=="1" | datos.modelo$EO_Symptoms=="6" | datos.modelo$TH_Outcome=="1" | datos.modelo$TH_Symptoms=="6")]<-"D"
 
 head(datos.modelo[which(datos.modelo$EO_Outcome=="1" & is.na(datos.modelo$GOS5) & is.na(datos.modelo$GOS8)),c(17,18,27,28,29,30,31)])
 ```
@@ -157,13 +154,212 @@ NROW(datos.modelo$outcome[which(is.na(datos.modelo$outcome))])
 ```
 ###FASE II: Clasificación entre: ESCANEADOS y NO ESCANEADOS
 
+```{r ,echo=FALSE}
+datos.modelo$ESTADOESCANER<-NA
 
-## Including Plots
+```
+* En primer lugar, se han encontrado ciertos datos anomalos, en los que aparecen datos escaneados (1) y no tienen los datos del escaner, entonces deberiamos ponerlo como no escaneado (2).
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$outcome=="MDGR" & datos.modelo$EO_Head.CT.scan=="1" 
+                                   & is.na(datos.modelo$EO_1.or.more.PH)
+                                   & is.na(datos.modelo$EO_Subarachnoid.bleed)
+                                   & is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                                   & is.na(datos.modelo$EO_Midline.shift..5mm)
+                                   & is.na(datos.modelo$EO_Non.evac.haem)
+                                   & is.na(datos.modelo$EO_Evac.haem) ),c(10,11,12,13,14,15,16)])
 
-You can also embed plots, for example:
+#Si esta escaneado 1 y no tiene datos de scanner, entonces lo ponemos a scaneado 2
+datos.modelo$EO_Head.CT.scan[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$EO_Head.CT.scan=="1" 
+                                   & is.na(datos.modelo$EO_1.or.more.PH)
+                                   & is.na(datos.modelo$EO_Subarachnoid.bleed)
+                                   & is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                                   & is.na(datos.modelo$EO_Midline.shift..5mm)
+                                   & is.na(datos.modelo$EO_Non.evac.haem)
+                                   & is.na(datos.modelo$EO_Evac.haem)
+                                     )]<-"2"
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+#Lo mismo con TH
+datos.modelo$TH_Head.CT.scan[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$TH_Head.CT.scan=="1" 
+                                   & is.na(datos.modelo$TH_1.or.more.PH)
+                                   & is.na(datos.modelo$TH_Subarachnoid.bleed)
+                                   & is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                                   & is.na(datos.modelo$TH_Midline.shift..5mm)
+                                   & is.na(datos.modelo$TH_Non.evac.haem)
+                                   & is.na(datos.modelo$TH_Evac.haem)
+)]<-"2"
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r ,echo=FALSE}
+datos.modelo$ESTADOESCANER[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$EO_Head.CT.scan=="1")]<-"SCANEADO"
+datos.modelo$ESTADOESCANER[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & datos.modelo$EO_Head.CT.scan=="2")]<-"NOSCANEADO"
+datos.modelo$ESTADOESCANER[which((datos.modelo$outcome == "MDGR" | datos.modelo$outcome == "D") & is.na(datos.modelo$EO_Head.CT.scan) )]<-"ENANALISIS"
+
+```
+
+* A continuación se van a clasificar los datos como:
+
+  + Escaneados
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER=="SCANEADO"  ),c(10,11,20,21,32)])
+
+```
+  + No escaneados
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER=="NOSCANEADO"  ),c(10,11,20,21,32)])
+
+```
+  + En analisis
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER=="ENANALISIS"  ),c(10,11,20,21,32)])
+
+```
+
+* Si el Outcome es 2 (el paciente se ha transferido a otro hospital), se ha escaneado en dicho hospital (TH_SCAN) y no se tiene ninguna información en los escáneres, se clasificaran como "En análisis".
+
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO" 
+                           & datos.modelo$EO_Outcome=="2"
+                           & is.na(datos.modelo$TH_1.or.more.PH)
+                           & is.na(datos.modelo$TH_Subarachnoid.bleed)
+                           & is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                           & is.na(datos.modelo$TH_Midline.shift..5mm)
+                           & is.na(datos.modelo$TH_Non.evac.haem)
+                           & is.na(datos.modelo$TH_Evac.haem) ),c(17,20,21,22)])
+
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" 
+                           & datos.modelo$EO_Outcome=="2"
+                           & is.na(datos.modelo$TH_1.or.more.PH)
+                           & is.na(datos.modelo$TH_Subarachnoid.bleed)
+                           & is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                           & is.na(datos.modelo$TH_Midline.shift..5mm)
+                           & is.na(datos.modelo$TH_Non.evac.haem)
+                           & is.na(datos.modelo$TH_Evac.haem)
+)]<-"ENANALISIS"
+```
+* Sobre el dataset NOSCANEADO: Si el Outcome es 2 (el paciente se ha transferido a otro hospital) y no se ha realizado ningun escaner pero si contiene datos en el escaner, entonces se clasificara como "Escaneado".
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "NOSCANEADO" 
+                           & datos.modelo$EO_Outcome=="2"
+                           & !is.na(datos.modelo$TH_1.or.more.PH)
+                           & !is.na(datos.modelo$TH_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$TH_Midline.shift..5mm)
+                           & !is.na(datos.modelo$TH_Non.evac.haem)
+                           & !is.na(datos.modelo$TH_Evac.haem) ),c(17,20,21,22)])
+
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "NOSCANEADO" 
+                           & datos.modelo$EO_Outcome=="2"
+                           & !is.na(datos.modelo$TH_1.or.more.PH)
+                           & !is.na(datos.modelo$TH_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$TH_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$TH_Midline.shift..5mm)
+                           & !is.na(datos.modelo$TH_Non.evac.haem)
+                           & !is.na(datos.modelo$TH_Evac.haem)
+                          
+)]<-"SCANEADO"
+```
+* Sobre el dataset NOSCANEADO: Nos hemos dado cuenta que existen datos anomalos, que contienen varios escaneres, pero sin embargo, no se indica como escaneado, son los registros: 2628,3276,3279,8469,8655, etc. (En total son 12)
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "NOSCANEADO"  
+                           & !is.na(datos.modelo$EO_1.or.more.PH)
+                           & !is.na(datos.modelo$EO_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$EO_Midline.shift..5mm)
+                           & !is.na(datos.modelo$EO_Non.evac.haem)
+                           & !is.na(datos.modelo$EO_Evac.haem))
+                        ,c(10,11,12)])
+
+datos.modelo$EO_Head.CT.scan[which(datos.modelo$ESTADOESCANER == "NOSCANEADO"  
+                           & !is.na(datos.modelo$EO_1.or.more.PH)
+                           & !is.na(datos.modelo$EO_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$EO_Midline.shift..5mm)
+                           & !is.na(datos.modelo$EO_Non.evac.haem)
+                           & !is.na(datos.modelo$EO_Evac.haem)
+)]<-"1"
+
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "NOSCANEADO"  
+                           & !is.na(datos.modelo$EO_1.or.more.PH)
+                           & !is.na(datos.modelo$EO_Subarachnoid.bleed)
+                           & !is.na(datos.modelo$EO_Obliteration.3rdVorBC)
+                           & !is.na(datos.modelo$EO_Midline.shift..5mm)
+                           & !is.na(datos.modelo$EO_Non.evac.haem)
+                           & !is.na(datos.modelo$EO_Evac.haem)
+                           )]<-"SCANEADO"
+
+
+```
+
+* Sobre el dataset ENANALISIS: Nos hemos dado cuenta de que existen datos anomalos. Para las variables de los pacientes que se han transferido a otro hospital (TH), existen variables de escaner (TH_Head.CT.scan) que se encuentran vacias, junto con el resto de variables del escaner en particular. Por lo tanto, se ha asignado el valor de 2 a la variable de escaner (TH_Head.CT.scan) y se han incluido en los escaneados, puesto que en todos ellos, en la variable EO_Head.CT.scan si que existe un valor de 1 (escaneados) y no se han encontrado mas anomalias en dichos datos.
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "ENANALISIS"  
+                                   & !is.na(datos.modelo$EO_Cause) 
+                                   & !is.na(datos.modelo$EO_Major.EC.injury)
+                                   & is.na(datos.modelo$TH_Head.CT.scan)
+                                   & !is.na(datos.modelo$TH_Major.EC.injury))
+                        ,c(10,11,17,20,21,22)])
+
+datos.modelo$TH_Head.CT.scan[which(datos.modelo$ESTADOESCANER == "ENANALISIS"  
+                                   & !is.na(datos.modelo$EO_Cause) 
+                                   & !is.na(datos.modelo$EO_Major.EC.injury)
+                                   & !is.na(datos.modelo$TH_Major.EC.injury)
+)]<-"2"
+
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "ENANALISIS"  
+                                   & !is.na(datos.modelo$EO_Cause) 
+                                   & !is.na(datos.modelo$EO_Major.EC.injury)
+                                   & !is.na(datos.modelo$TH_Major.EC.injury)
+)]<-"SCANEADO"
+
+```
+* Sobre el dataset SCANEADO: Se van a eliminar todas las filas que no tengan informacion en el TH_Major.EC.injury y en el EO_Major.EC.injury
+
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & datos.modelo$EO_Outcome=="2" & is.na(datos.modelo$TH_Major.EC.injury)),c(17,19)])
+
+#Eliminamos los que no tengan el EC Injury en el TH
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & datos.modelo$EO_Outcome=="2" & is.na(datos.modelo$TH_Major.EC.injury))]<-"ENANALISIS"
+#Eliminamos los que no tengan el EC Injury en el EO
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & is.na(datos.modelo$EO_Major.EC.injury))]<-"ENANALISIS"
+
+```
+* Sobre el dataset SCANEADO: Comprobamos que las variables: EO_Cause y EO_Symptoms, no contengan valores nulos.
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Cause ) | is.na(datos.modelo$EO_Symptoms))),c(3,4)])
+#Comprobamos que no existan variables que contengan nulos
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Cause ) | is.na(datos.modelo$EO_Symptoms)))]<-"ENANALISIS"
+```
+
+#### DATOS FINALES:
+* Vivos y escaneados
+```{r ,echo=FALSE}
+NROW(datos.modelo$outcome[which(datos.modelo$outcome=="MDGR" & datos.modelo$ESTADOESCANER == "SCANEADO")])
+
+```
+* Vivos y no escaneados
+```{r ,echo=FALSE}
+NROW(datos.modelo$outcome[which(datos.modelo$outcome=="MDGR" & datos.modelo$ESTADOESCANER == "NOSCANEADO")])
+
+```
+* Vivos en an�lisis
+```{r ,echo=FALSE}
+NROW(datos.modelo$outcome[which(datos.modelo$outcome=="MDGR" & datos.modelo$ESTADOESCANER == "ENANALISIS")])
+
+```
+
+* Fallecidos y escaneados
+```{r ,echo=FALSE}
+NROW(datos.modelo$outcome[which(datos.modelo$outcome=="D" & datos.modelo$ESTADOESCANER == "SCANEADO")])
+
+```
+* Fallecidos y no escaneados
+```{r ,echo=FALSE}
+NROW(datos.modelo$outcome[which(datos.modelo$outcome=="D" & datos.modelo$ESTADOESCANER == "NOSCANEADO")])
+
+```
+* Fallecidos en an�lisis
+```{r ,echo=FALSE}
+NROW(datos.modelo$outcome[which(datos.modelo$outcome=="D" & datos.modelo$ESTADOESCANER == "ENANALISIS")])
+
+```
+
