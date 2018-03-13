@@ -26,7 +26,7 @@ datos.modelo <- subset(CRASH_data_1, select =
                            PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_Head.CT.scan,EO_1.or.more.PH,
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
                            EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Outcome,
-                           EO_Symptoms,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
+                           EO_Symptoms,TH_Cause,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
                            TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,GOS5,GOS8))
 
 
@@ -223,7 +223,7 @@ enanalisisDEATH<-subset(datos.modelo, ESTADOESCANER == "ENANALISIS" & datos.mode
 
 final <- merge(scaneadoVIVOS, scaneadosDEATH, all=TRUE) 
 
-write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINAL.xlsx")                   
+#write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINAL.xlsx")                   
 #write.xlsx(scaneadosDEATH, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ESCANEADO_DEATHS.xlsx")
 #write.xlsx(scaneadoVIVOS, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ESCANEADO.xlsx")
 #write.xlsx(enanalisisDEATH, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ENANALISIS_DEATHS.xlsx")
@@ -241,21 +241,37 @@ write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINAL.xlsx")
 # ***********************************************************************************
 
 #Creamos una columna con la union de las pupilas
-datos.modelo$pupils<-NA
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="1" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="2" & datos.modelo$PUPIL_REACT_RIGHT=="2")] <- "3" #no response 
-datos.modelo$pupils[which(datos.modelo$PUPIL_REACT_LEFT=="3" & datos.modelo$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
-factor(datos.modelo$pupils)
+final$pupils<-NA
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="3")] <- "1" #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral 
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="3")] <- "2" #no response unilateral 
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="2")] <- "3" #no response
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
+factor(final$pupils)
+#final <- final[,c(8,9,33)]
+#write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ANALISISPUPILAR.xlsx")
+NROW(final$pupils[which(final$pupils==1)])
+NROW(final$pupils[which(final$pupils==2)])
+NROW(final$pupils[which(final$pupils==3)])
+NROW(final$pupils[which(final$pupils==4)])
 
 
+NROW(final$EO_Outcome[which(final$EO_Outcome==2)])
 #Eliminamos las variables que no necesitemos
-datos.modelo <- subset(datos.modelo, select = 
+final <- subset(final, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
-                           pupils,EO_1.or.more.PH,
+                           pupils,EO_Head.CT.scan,EO_1.or.more.PH,
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
-                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Head.CT.scan,outcome))
+                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Outcome,
+                           EO_Symptoms,TH_Cause,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
+                           TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,outcome))
+
+final <- final[which(!is.na(final$TH_Major.EC.injury) & (final$EO_Major.EC.injury != final$TH_Major.EC.injury)),c(4,19)]
+#QUe diferencia hay entre los dos evac.haem?
 
 #datos.modelo <- datos.modelo[datos.modelo$EO_Head.CT.scan=="1",]
 datos.modelo <- datos.modelo[!is.na(datos.modelo$outcome),]

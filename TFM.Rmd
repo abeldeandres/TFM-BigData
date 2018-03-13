@@ -1,6 +1,8 @@
 ---
 title: "TFM"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +20,7 @@ datos.modelo <- subset(CRASH_data_1, select =
                            EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
                            EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Outcome,
                            EO_Symptoms,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
-                           TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,GOS5,GOS8))
+                           TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,GOS5,GOS8,TH_Cause))
 ```
 
 ###FASE I: ClasificaciÃ³n entre: ALIVE, DEATH, NO-DATA y MD/GR
@@ -362,4 +364,65 @@ NROW(datos.modelo$outcome[which(datos.modelo$outcome=="D" & datos.modelo$ESTADOE
 NROW(datos.modelo$outcome[which(datos.modelo$outcome=="D" & datos.modelo$ESTADOESCANER == "ENANALISIS")])
 
 ```
+
+```{r ,echo=FALSE}
+scaneadoVIVOS<-subset(datos.modelo, ESTADOESCANER == "SCANEADO" & datos.modelo$outcome == "MDGR")
+noscaneadoVIVOS<-subset(datos.modelo, ESTADOESCANER == "NOSCANEADO" & datos.modelo$outcome == "MDGR") 
+enalisisVIVOS<-subset(datos.modelo, ESTADOESCANER == "ENANALISIS" & datos.modelo$outcome == "MDGR")
+scaneadosDEATH<-subset(datos.modelo, ESTADOESCANER == "SCANEADO" & datos.modelo$outcome == "D")
+noscaneadoDEATH<-subset(datos.modelo, ESTADOESCANER == "NOSCANEADO" & datos.modelo$outcome == "D") 
+enanalisisDEATH<-subset(datos.modelo, ESTADOESCANER == "ENANALISIS" & datos.modelo$outcome == "D")
+
+final <- merge(scaneadoVIVOS, scaneadosDEATH, all=TRUE) 
+
+```
+
+### FASE III: Eliminacion y centralizacion de variables
+* Se va a centralizar las variables de PUPIL_REACT_LEFT y PUPIL_REACT_RIGHT
+```{r ,echo=FALSE}
+#Creamos una columna con la union de las pupilas
+final$pupils<-NA
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="3")] <- "1" #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral 
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="3")] <- "2" #no response unilateral 
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="2")] <- "3" #no response
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
+
+head(final[,c(8,9,33)])
+
+
+
+```
+* Both reactive
+```{r ,echo=FALSE}
+NROW(final$pupils[which(final$pupils==1)])
+
+```
+
+* No response unilateral
+```{r ,echo=FALSE}
+NROW(final$pupils[which(final$pupils==2)])
+
+```
+* No response 
+```{r ,echo=FALSE}
+NROW(final$pupils[which(final$pupils==3)])
+
+```
+* Unable to assess
+```{r ,echo=FALSE}
+NROW(final$pupils[which(final$pupils==4)])
+
+```
+
+* Ahora vamos a ver si podemos prescindir o aunar las variables de EO_Cause y TH_Cause. Para ello veremos en que caso, ambas variables difieren:
+```{r ,echo=FALSE}
+head(final[which(final$EO_Cause != final$TH_Cause),c(3,31)])
+
+```
+* Como se puede observar, podriamos prescindir de la variable TH_Cause, puesto que recoge la misma información que EO_Cause.
 
