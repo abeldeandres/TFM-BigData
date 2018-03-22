@@ -209,6 +209,8 @@ datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "ENANALISIS"
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & datos.modelo$EO_Outcome=="2" & is.na(datos.modelo$TH_Major.EC.injury))]<-"ENANALISIS"
 #Eliminamos los que no tengan el EC Injury en el EO
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & is.na(datos.modelo$EO_Major.EC.injury))]<-"ENANALISIS"
+#Eliminamos los que no tengan el EO_Outcome
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & is.na(datos.modelo$EO_Outcome))]<-"ENANALISIS"
 
 #Comprobamos que no existan variables que contengan nulos
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Cause ) | is.na(datos.modelo$EO_Symptoms)))]<-"ENANALISIS"
@@ -261,6 +263,31 @@ NROW(final$pupils[which(final$pupils==4)])
 
 
 NROW(final$EO_Outcome[which(final$EO_Outcome==2)])
+
+
+#PHM
+final$phm<-NA
+final$phm[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_1.or.more.PH[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$phm[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_1.or.more.PH[which(final$EO_Outcome!="2" | final$TH_Head.CT.scan!="1")]
+
+#SAH
+final$sah<-NA
+final$sah[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Subarachnoid.bleed[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$sah[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Subarachnoid.bleed[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#OBLT
+final$oblt<-NA
+final$oblt[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Obliteration.3rdVorBC[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$oblt[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Obliteration.3rdVorBC[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#mdls
+final$mdls<-NA
+final$mdls[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Midline.shift..5mm[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$mdls[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Midline.shift..5mm[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#final$hmt<-NA
+write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
+
 #Eliminamos las variables que no necesitemos
 final <- subset(final, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
@@ -270,7 +297,7 @@ final <- subset(final, select =
                            EO_Symptoms,TH_Cause,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
                            TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,outcome))
 
-final <- final[which(!is.na(final$TH_Major.EC.injury) & (final$EO_Major.EC.injury != final$TH_Major.EC.injury)),c(4,19)]
+#final <- final[which(!is.na(final$TH_Major.EC.injury) & (final$EO_Major.EC.injury != final$TH_Major.EC.injury)),c(4,19)]
 #QUe diferencia hay entre los dos evac.haem?
 
 #datos.modelo <- datos.modelo[datos.modelo$EO_Head.CT.scan=="1",]

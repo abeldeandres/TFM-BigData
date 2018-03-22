@@ -1,8 +1,8 @@
 ---
 title: "TFM"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -331,6 +331,13 @@ head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.
 #Comprobamos que no existan variables que contengan nulos
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Cause ) | is.na(datos.modelo$EO_Symptoms)))]<-"ENANALISIS"
 ```
+* Sobre el dataset SCANEADO: Comprobamos que las variable: EO_Outcome no se encuentre nula.(En total son 2 registros)
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Outcome ))),c(3,17)])
+#Eliminamos los que no tengan el EO_Outcome
+datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Outcome )))]<-"ENANALISIS"
+```
+
 
 #### DATOS FINALES:
 * Vivos y escaneados
