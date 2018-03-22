@@ -433,3 +433,39 @@ head(final[which(final$EO_Cause != final$TH_Cause),c(3,31)])
 ```
 * Como se puede observar, podriamos prescindir de la variable TH_Cause, puesto que recoge la misma información que EO_Cause.
 
+* A continuación vamos a aunar todas las variables del escaner. Si un paciente ha sido transferido a otro hospital y se han realizado los escaneres, entonces, se mantendran los ultimos valores del escaner. En caso contrario, se usaran los primeros resultados de escaner obtenidos. Además, eliminaremos todas las variables que no se utilicen.
+
+```{r ,echo=FALSE}
+#PHM
+final$phm<-NA
+final$phm[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_1.or.more.PH[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$phm[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_1.or.more.PH[which(final$EO_Outcome!="2" | final$TH_Head.CT.scan!="1")]
+
+#SAH
+final$sah<-NA
+final$sah[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Subarachnoid.bleed[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$sah[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Subarachnoid.bleed[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#OBLT
+final$oblt<-NA
+final$oblt[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Obliteration.3rdVorBC[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$oblt[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Obliteration.3rdVorBC[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#mdls
+final$mdls<-NA
+final$mdls[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Midline.shift..5mm[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$mdls[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Midline.shift..5mm[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#hmt
+final$hmt<-NA
+final$hmt[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Non.evac.haem[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$hmt[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Non.evac.haem[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#Eliminamos las variables que no necesitemos
+final <- subset(final, select = 
+                         c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
+                           pupils,phm,sah,oblt,mdls,hmt,outcome))
+
+head(final)
+
+```

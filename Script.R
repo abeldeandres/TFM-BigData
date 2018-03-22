@@ -285,17 +285,20 @@ final$mdls<-NA
 final$mdls[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Midline.shift..5mm[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
 final$mdls[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Midline.shift..5mm[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
 
-#final$hmt<-NA
-write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
+#hmt
+final$hmt<-NA
+final$hmt[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Non.evac.haem[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
+final$hmt[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Non.evac.haem[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+
+#write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
 
 #Eliminamos las variables que no necesitemos
 final <- subset(final, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
-                           pupils,EO_Head.CT.scan,EO_1.or.more.PH,
-                           EO_Subarachnoid.bleed,EO_Obliteration.3rdVorBC,
-                           EO_Midline.shift..5mm,EO_Non.evac.haem,EO_Evac.haem,EO_Outcome,
-                           EO_Symptoms,TH_Cause,TH_Major.EC.injury,TH_Head.CT.scan,TH_1.or.more.PH,TH_Subarachnoid.bleed,
-                           TH_Obliteration.3rdVorBC,TH_Midline.shift..5mm,TH_Non.evac.haem,TH_Evac.haem,TH_Outcome,TH_Symptoms,outcome))
+                           pupils,phm,sah,oblt,mdls,hmt,outcome))
+
+write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
 
 #final <- final[which(!is.na(final$TH_Major.EC.injury) & (final$EO_Major.EC.injury != final$TH_Major.EC.injury)),c(4,19)]
 #QUe diferencia hay entre los dos evac.haem?
