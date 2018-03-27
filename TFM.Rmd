@@ -433,7 +433,7 @@ head(final[which(final$EO_Cause != final$TH_Cause),c(3,31)])
 ```
 * Como se puede observar, podriamos prescindir de la variable TH_Cause, puesto que recoge la misma información que EO_Cause.
 
-* A continuación vamos a aunar todas las variables del escaner. Si un paciente ha sido transferido a otro hospital y se han realizado los escaneres, entonces, se mantendran los ultimos valores del escaner. En caso contrario, se usaran los primeros resultados de escaner obtenidos. Además, eliminaremos todas las variables que no se utilicen.
+* A continuación vamos a aunar todas las variables del escaner. Si un paciente ha sido transferido a otro hospital y se han realizado los escaneres en dicho hospital, entonces, se mantendran los ultimos valores del escaner. En caso contrario, se usaran los primeros resultados de escaner obtenidos en el primer. Además, eliminaremos todas las variables que no se utilicen.
 
 ```{r ,echo=FALSE}
 #PHM

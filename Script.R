@@ -244,15 +244,15 @@ final <- merge(scaneadoVIVOS, scaneadosDEATH, all=TRUE)
 
 #Creamos una columna con la union de las pupilas
 final$pupils<-NA
-final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
-final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="1")] <- "1" #both reactive
-final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="3")] <- "1" #both reactive
-final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral
-final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="1")] <- "2" #no response unilateral
-final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="2")] <- "2" #no response unilateral 
-final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="3")] <- "2" #no response unilateral 
-final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="2")] <- "3" #no response
-final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="3")] <- "4" #unable to asseses
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="1")] <- 1 #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="1")] <- 1 #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="3")] <- 1 #both reactive
+final$pupils[which(final$PUPIL_REACT_LEFT=="1" & final$PUPIL_REACT_RIGHT=="2")] <- 2 #no response unilateral
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="1")] <- 2 #no response unilateral
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="2")] <- 2 #no response unilateral 
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="3")] <- 2 #no response unilateral 
+final$pupils[which(final$PUPIL_REACT_LEFT=="2" & final$PUPIL_REACT_RIGHT=="2")] <- 3 #no response
+final$pupils[which(final$PUPIL_REACT_LEFT=="3" & final$PUPIL_REACT_RIGHT=="3")] <- 4 #unable to asseses
 factor(final$pupils)
 #final <- final[,c(8,9,33)]
 #write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/ANALISISPUPILAR.xlsx")
@@ -293,58 +293,32 @@ final$hmt[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$E
 
 #write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
 
+#Reemplazamos las variables de outcome de categoricas a variables numericas 0 y 1
+final$outcome[which(final$outcome=="D")] <- "1" #Fallece
+final$outcome[which(final$outcome=="MDGR")] <- "0" #Vive
+final$outcome<- as.integer(final$outcome)
+
 #Eliminamos las variables que no necesitemos
 final <- subset(final, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
                            pupils,phm,sah,oblt,mdls,hmt,outcome))
 
-write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
+#write.xlsx(final, "C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/FINALAUNADOS.xlsx")
 
 #final <- final[which(!is.na(final$TH_Major.EC.injury) & (final$EO_Major.EC.injury != final$TH_Major.EC.injury)),c(4,19)]
 #QUe diferencia hay entre los dos evac.haem?
 
-#datos.modelo <- datos.modelo[datos.modelo$EO_Head.CT.scan=="1",]
-datos.modelo <- datos.modelo[!is.na(datos.modelo$outcome),]
-#datos.modelo <- datos.modelo[!is.na(datos.modelo$outcome),]
-
 #Borramos todos los NA
-datos.modelo<-na.omit(datos.modelo)
+final<-na.omit(final)
+NROW(final)
 
 #datos.modelo[datos.modelo$AGE == -1, ]
 
-#nrow(datos.modelo) Tenemos 10008 pacientes
-#Con esto limpiamos las variables de NA y campos vacios
-if(TRUE){
-  #datos.modelo <- datos.modelo[!is.na(datos.modelo$EO_Cause),]
-  #NROW(datos.modelo)
-  #datos.modelo <- datos.modelo[!is.na(datos.modelo$EO_1.or.more.PH),]
-  #NROW(datos.modelo)
-  #datos.modelo <- datos.modelo[!is.na(datos.modelo$EO_Major.EC.injury),]
-  #NROW(datos.modelo)
-  #datos.modelo <- datos.modelo[datos.modelo$GOS5!="",]
-  NROW(datos.modelo)
-  datos.modelo$GOS5 <- as.character(datos.modelo$GOS5)
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="D")] <- "0"
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="SD")] <- "0"
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="SD*")] <- "0"
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="GR*")] <- "1"
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="GR")] <- "1"
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="MD*")] <- "1"
-  datos.modelo$GOS5[which(datos.modelo$GOS5=="MD")] <- "1"
-  datos.modelo$GOS5 <- as.numeric(datos.modelo$GOS5)
-  #factor(datos.modelo$EO_Major.EC.injury)
-}
-
-
-#datos.modelo=na.omit(datos.modelo$GOS5)
-NROW(datos.modelo)
-datos.modelo<-na.omit(datos.modelo)
 #Vemos los valores nulos de cada variable
-
-sapply(datos.modelo,function(x) sum(is.na(x)))
-sapply(datos.modelo, function(x) length(unique(x)))
-missmap(datos.modelo, main = "Missing values vs observed")
-NROW(datos.modelo )
+sapply(final,function(x) sum(is.na(x)))
+sapply(final, function(x) length(unique(x)))
+missmap(final, main = "Missing values vs observed")
+NROW(final )
 
 #***********************************************************************************
 # Nombre: MODELO COMPLETO
@@ -353,29 +327,28 @@ NROW(datos.modelo )
 # Modificación: 
 # ***********************************************************************************
 
-data_train <- datos.modelo[1:3581, ]
-data_test <- datos.modelo[3582:NROW(datos.modelo ), ]
+data_train <- final[1:3493, ]
+data_test <- final[3493:NROW(final ), ]
 
 
-fit <- glm(GOS5 ~SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
-             pupils+EO_1.or.more.PH+
-             EO_Subarachnoid.bleed+EO_Obliteration.3rdVorBC+
-             EO_Midline.shift..5mm+EO_Non.evac.haem+EO_Evac.haem,
+fit <- glm(outcome ~SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
+           pupils+phm+sah+oblt+mdls+hmt,
            data=data_train,family = binomial(link="logit"))
 summary(fit) # show results
 
 #CROSS VALIDATION
 set.seed(1337)
 #Fit a logistic model using default and income values
-glm.fit <- glm(GOS5 ~ SEX+ AGE+GCS_EYE+GCS_MOTOR+GCS_VERBAL+pupils ,data=datos.modelo,family = binomial)
+glm.fit <- glm(outcome ~SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
+                 pupils+phm+sah+oblt+mdls+hmt ,data=final,family = binomial)
 # Create a vector with three blank values
 cv.error <- rep(0,3)
 
 
 # Store the results of each K  validation set into cv.error.  Use K= {3,5,10} 
-cv.error[1] <- cv.glm(datos.modelo, glm.fit, K=3)$delta[1]
-cv.error[2] <- cv.glm(datos.modelo, glm.fit, K=5)$delta[1]
-cv.error[3] <- cv.glm(datos.modelo, glm.fit, K=10)$delta[1]
+cv.error[1] <- cv.glm(final, glm.fit, K=3)$delta[1]
+cv.error[2] <- cv.glm(final, glm.fit, K=5)$delta[1]
+cv.error[3] <- cv.glm(final, glm.fit, K=10)$delta[1]
 
 1- mean(cv.error) 
 
@@ -390,10 +363,10 @@ glm.probs <- predict(fit, newdata = data_test, type = "response")  # predicted p
 glm.pred <- rep(0, 45)  # Muere
 glm.pred[glm.probs > 0.5] = "1"  #  Vive
 
-confusionMatrix(table(glm.pred, data_test$GOS5), positive = "1")  # from the caret package, also need e1071 package
+confusionMatrix(table(glm.pred, data_test$outcome), positive = "1")  # from the caret package, also need e1071 package
 
 #Model Performance
-pr <- prediction(glm.probs, data_test$GOS5)
+pr <- prediction(glm.probs, data_test$outcome)
 prf <- performance(pr, measure = "tpr", x.measure = "fpr")
 plot(prf,colorize = TRUE)
 # Añadimos la recta y=x que sería la correspondiente al peor clasificador
