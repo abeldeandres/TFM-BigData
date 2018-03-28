@@ -338,6 +338,13 @@ head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Outcome )))]<-"ENANALISIS"
 ```
 
+* Sobre el dataset SCANEADO: Comprobamos que existe un valor anómalo (que se sale del rango) en un registro en la columna de EO_Major.EC.Injury. Este valor lo cambiaremos a positivo -> 1
+```{r ,echo=FALSE}
+head(datos.modelo[which(datos.modelo$ESTADOESCANER == "SCANEADO" & datos.modelo$EO_Major.EC.injury==-1),c(3,4)])
+datos.modelo$EO_Major.EC.injury[which(datos.modelo$ESTADOESCANER == "SCANEADO" & datos.modelo$EO_Major.EC.injury==-1 )]<-1
+
+```
+
 
 #### DATOS FINALES:
 * Vivos y escaneados

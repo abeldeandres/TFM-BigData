@@ -212,6 +212,9 @@ datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & is.
 #Eliminamos los que no tengan el EO_Outcome
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO"  & is.na(datos.modelo$EO_Outcome))]<-"ENANALISIS"
 
+#Cambiamos los datos anomalos del EO_MAJOR.EC
+datos.modelo$EO_Major.EC.injury[which(datos.modelo$ESTADOESCANER == "SCANEADO" & datos.modelo$EO_Major.EC.injury==-1 )]<-1
+
 #Comprobamos que no existan variables que contengan nulos
 datos.modelo$ESTADOESCANER[which(datos.modelo$ESTADOESCANER == "SCANEADO" & (is.na(datos.modelo$EO_Cause ) | is.na(datos.modelo$EO_Symptoms)))]<-"ENANALISIS"
 
