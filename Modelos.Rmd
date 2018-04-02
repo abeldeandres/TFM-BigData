@@ -1,0 +1,60 @@
+---
+title: "Modelos"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(Encoding="UTF-8")
+```
+
+##USO DE MODELOS
+###Búsqueda de OUTLIERS (datos anomálos)
+```{r , echo=FALSE}
+rm(list = ls())
+final <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+```
+* Se ha realizado un diagrama de caja para el conjunto de nuestro dataset
+```{r , echo=FALSE}
+boxplot(final)
+```
+* Nos hemos dado cuenta que existen numerosos datos anomalos "Outliers" en la variable de edad.
+```{r , echo=FALSE}
+outliers<-boxplot(final$age,  ylab = "age")
+```
+
+
+* Estos son las edades anomalas:
+```{r , echo=FALSE}
+outliers<-outliers$out
+outliers
+```
+* Antes de proceder a eliminar los datos anomalos, vamos a ver la correlacion existente con la variable de "Outcome";
+```{r , echo=FALSE}
+cor(final$age, final$outcome, method=c("pearson"))
+```
+
+* Por tanto, hemos creado una funcion que nos elimine directamente los datos anomalos, es decir, todos aquellos datos que no se encuentren en el rango Q1-1.5·RIC o superiores a Q3+1.5·RIC se eliminaran. Siendo RIC el rango intercuartil (Q1-Q3)
+
+```{r , echo=FALSE}
+eliminar_outliers <- function(x, na.rm = TRUE) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
+}
+
+final$age= eliminar_outliers(final$age)
+final$age= eliminar_outliers(final$age)
+final <- final[!is.na(final$age),]
+boxplot(final$age,  ylab = "age")
+```
+
+* Ahora veamos la correlacion posterior a la eliminacion de los datos anomalos con la variable de "Outcome";
+```{r , echo=FALSE}
+cor(final$age, final$outcome, method=c("pearson"))
+```
+
+* Vemos que la correlacion ha empeorado un poco. De todas formas la correlacion entre la edad y el "outcome" es bastante debil.

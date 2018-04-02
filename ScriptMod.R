@@ -1,12 +1,78 @@
+library(corrplot)
 rm(list = ls())
+dev.off(dev.list()["RStudioGD"])
+
 final <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 
-#Busqueda de Outliers
-boxplot(final$sex,  ylab = "sex")
-dotchart(final$sex, xlab = "sex",  ylab = "Orden de los datos")
-boxplot(final$age,  ylab = "age")
-dotchart(final$age, xlab = "age",  ylab = "Orden de los datos")
+#Coeficiente de correlacion de Pearson R
+MCOR <- cor(final)
+corrplot(MCOR, method = "number") # Display the correlation coefficient
 
+correlacion<-cor(final$age, final$outcome, method=c("pearson"))
+
+boxplot(final,style = "tukey")
+#Busqueda de Outliers
+b<-boxplot(final$age,  ylab = "age",style = "tukey")
+b<-b$out
+b
+#b1<-outlier(final$age,opposite = FALSE, logical = FALSE)
+#b1
+#rm.outlier(final$age, fill = FALSE, median = FALSE, opposite = FALSE)
+#NROW(final$age[which(final$age>84)])
+#final <- final[final$age<85,]
+#boxplot(final$age,  ylab = "age")
+
+
+#boxplot(final$sex,  ylab = "sex")
+#dotchart(final$sex, xlab = "sex",  ylab = "Orden de los datos")
+#boxplot(final$cause,  ylab = "cause")
+#boxplot(final$ec,  ylab = "ec")
+#boxplot(final$eye,  ylab = "eye")
+#boxplot(final$motor,  ylab = "motor")
+#boxplot(final$verbal,  ylab = "verbal")
+#boxplot(final$pupils,  ylab = "pupils")
+#boxplot(final$phm,  ylab = "phm")
+#boxplot(final$sah,  ylab = "sah")
+#boxplot(final$oblt,  ylab = "oblt")
+#boxplot(final$mdls,  ylab = "mdls")
+#boxplot(final$hmt,  ylab = "hmt")
+
+#Se eliminan los datos que esten por encima o por debajo del quantil (Q1 y Q3) o fuera del rango
+#interquantilico
+eliminar_outliers <- function(x, na.rm = TRUE) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
+}
+
+final$age= eliminar_outliers(final$age)
+final <- final[!is.na(final$age),]
+boxplot(final$age,  ylab = "age")
+
+MCOR <- cor(final)
+corrplot(MCOR, method = "number") # Display the correlation coefficient
+
+
+mvn(final[1:5000, ], subset = NULL, mvnTest = c("mardia", "hz", "royston", "dh","energy"), covariance = TRUE, scale = FALSE, desc = TRUE,
+    transform = "none", R = 1000, univariateTest = c("SW", "CVM", "Lillie","SF", "AD"), univariatePlot = "none", multivariatePlot = "none",
+    multivariateOutlierMethod = "none", showOutliers = TRUE,
+    showNewData = TRUE)
+
+
+#Distancia de cooks para determinar los Outliers
+#But, what does cook's distance mean? It computes the influence exerted by each data point (row) on the predicted outcome.
+mod <- lm(outcome ~ ., data=final)
+cooksd <- cooks.distance(mod)
+
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
+
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm=T))])  # influential row numbers
+head(final[influential, ])  # influential observations.
 
 #***********************************************************************************
 # Nombre: MODELO COMPLETO
@@ -15,11 +81,11 @@ dotchart(final$age, xlab = "age",  ylab = "Orden de los datos")
 # Modificación: 
 # ***********************************************************************************
 
-data_train <- final[1:3493, ]
-data_test <- final[3493:NROW(final ), ]
+data_train <- final[1:3465, ]
+data_test <- final[3466:NROW(final ), ]
 
 
-fit <- glm(outcome ~SEX+AGE+EO_Cause+EO_Major.EC.injury+GCS_EYE+GCS_MOTOR+GCS_VERBAL+
+fit <- glm(outcome ~sex+age+cause+ec+eye+motor+verbal+
              pupils+phm+sah+oblt+mdls+hmt,
            data=data_train,family = binomial(link="logit"))
 summary(fit) # show results
