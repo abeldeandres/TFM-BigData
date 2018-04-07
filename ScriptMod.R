@@ -1,4 +1,10 @@
 library(corrplot)
+library(normtest) ###REALIZA 5 PRUEBAS DE NORMALIDAD###
+library(nortest) ###REALIZA 10 PRUEBAS DE NORMALIDAD###
+library(moments) ###REALIZA 1 PRUEBA DE NORMALIDAD###
+library(mvnTest)
+library(randomForest)
+library(rpart)
 rm(list = ls())
 dev.off(dev.list()["RStudioGD"])
 
@@ -49,17 +55,82 @@ eliminar_outliers <- function(x, na.rm = TRUE) {
 }
 
 final$age= eliminar_outliers(final$age)
-final <- final[!is.na(final$age),]
+final <-na.omit(final)
+#final <- final[!is.na(final$age),]
 boxplot(final$age,  ylab = "age")
 
 MCOR <- cor(final)
 corrplot(MCOR, method = "number") # Display the correlation coefficient
 
+#No se puede utilizar MVN ya que la matriz no es cuadrada y el determinante vale 0
+#matrix<-data.matrix(final[1:14,1:14], rownames.force = NA)
+#result <- mvn(data = final[1:5000, ], mvnTest = "hz")
+HZ.test(final, qqplot = TRUE)
 
-mvn(final[1:5000, ], subset = NULL, mvnTest = c("mardia", "hz", "royston", "dh","energy"), covariance = TRUE, scale = FALSE, desc = TRUE,
-    transform = "none", R = 1000, univariateTest = c("SW", "CVM", "Lillie","SF", "AD"), univariatePlot = "none", multivariatePlot = "none",
-    multivariateOutlierMethod = "none", showOutliers = TRUE,
-    showNewData = TRUE)
+mshapiro.test(as.matrix(final[,1:14]))
+#ANALISIS DE NORMALIDAD
+par(mfrow=c(2,2))
+plot(density(final$sex))
+plot(density(final$age))
+plot(density(final$cause))
+plot(density(final$ec))
+par(mfrow=c(2,2))
+plot(density(final$eye))
+plot(density(final$motor))
+plot(density(final$verbal))
+plot(density(final$pupils))
+par(mfrow=c(2,2))
+plot(density(final$phm))
+plot(density(final$sah))
+plot(density(final$oblt))
+plot(density(final$mdls))
+par(mfrow=c(1,2))
+plot(density(final$hmt))
+plot(density(final$outcome))
+
+shapiro.test(final$sex[1:5000])
+shapiro.test(final$age[1:5000])
+qqnorm(final$age);qqline(final$age, col = 2)
+shapiro.test(final$cause[1:5000])
+shapiro.test(final$ec[1:5000])
+shapiro.test(final$eye[1:5000])
+shapiro.test(final$motor[1:5000])
+shapiro.test(final$verbal[1:5000])
+shapiro.test(final$pupils[1:5000])
+shapiro.test(final$phm[1:5000])
+shapiro.test(final$sah[1:5000])
+shapiro.test(final$oblt[1:5000])
+shapiro.test(final$mdls[1:5000])
+shapiro.test(final$hmt[1:5000])
+shapiro.test(final$outcome[1:5000])
+
+mean<-colMeans(final)
+Sx<-cov(final)
+D2<-mahalanobis(final,mean,Sx)
+D2
+
+#http://www.cotradingclub.com/2017/05/25/prueba-de-normalidad-en-modelos-de-prediccion/
+jb.norm.test(final)
+hist(final$age)
+mardia(final)
+
+#Random Trees (Importance Variable) https://www.r-bloggers.com/variable-importance-plot-and-variable-selection/
+fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
+                   pupils+phm+sah+oblt+mdls+hmt,
+                 data=final)
+(VI_F=importance(fit))
+View(VI_F[order(abs(VI_F),decreasing=T),])
+#El siguiente grafico representa la importancia
+#de las variables segun su media y los valores del Random Forest
+varImpPlot(fit,type=2)
+
+fit=rpart(outcome ~sex+age+cause+ec+eye+motor+verbal+
+            pupils+phm+sah+oblt+mdls+hmt,
+          data=final)
+plot(fit)
+text(fit)
+
+
 
 
 #Distancia de cooks para determinar los Outliers
@@ -81,14 +152,16 @@ head(final[influential, ])  # influential observations.
 # Modificación: 
 # ***********************************************************************************
 
-data_train <- final[1:3465, ]
-data_test <- final[3466:NROW(final ), ]
+#data_train <- final[1:3465, ]
+#data_test <- final[3466:NROW(final ), ]
 
 
 fit <- glm(outcome ~sex+age+cause+ec+eye+motor+verbal+
              pupils+phm+sah+oblt+mdls+hmt,
-           data=data_train,family = binomial(link="logit"))
+           data=final,family = binomial(link="logit"))
 summary(fit) # show results
+jb.norm.test(fit$residuals)
+hist(fit$residuals)
 
 #CROSS VALIDATION
 set.seed(1337)

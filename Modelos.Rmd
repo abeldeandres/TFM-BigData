@@ -10,7 +10,15 @@ options(Encoding="UTF-8")
 
 ##USO DE MODELOS
 ###Búsqueda de OUTLIERS (datos anomálos)
-```{r , echo=FALSE}
+```{r , echo=FALSE, include=FALSE}
+library(normtest) ###REALIZA 5 PRUEBAS DE NORMALIDAD###
+library(nortest) ###REALIZA 10 PRUEBAS DE NORMALIDAD###
+library(moments) ###REALIZA 1 PRUEBA DE NORMALIDAD###
+library(mvnTest)
+library(dprep)
+library(corrplot)
+library(randomForest)
+library(rpart)
 rm(list = ls())
 final <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 ```
@@ -58,3 +66,113 @@ cor(final$age, final$outcome, method=c("pearson"))
 ```
 
 * Vemos que la correlacion ha empeorado un poco. De todas formas la correlacion entre la edad y el "outcome" es bastante debil.
+
+###ANÁLISIS DE NORMALIDAD
+* En primer lugar, visualizaremos la densidad de nuestras variables (individualmente), con el objetivo de observar a simple vista si cumplen o no con una distribucion normal.
+
+
+```{r , echo=FALSE}
+par(mfrow=c(2,2))
+plot(density(final$sex))
+plot(density(final$age))
+plot(density(final$cause))
+plot(density(final$ec))
+par(mfrow=c(2,2))
+plot(density(final$eye))
+plot(density(final$motor))
+plot(density(final$verbal))
+plot(density(final$pupils))
+par(mfrow=c(2,2))
+plot(density(final$phm))
+plot(density(final$sah))
+plot(density(final$oblt))
+plot(density(final$mdls))
+par(mfrow=c(2,2))
+plot(density(final$hmt))
+plot(density(final$outcome))
+```
+
+
+* Como podemos comprobar, al tratarse de variables discretas (expceto la variable de edad -age-), no lograremos conseguir una distribucion normal de forma individual.
+* Otro aspecto a tener en cuenta es que para que un conjunto de datos (teniendo en cuenta todas las variables) posea una distribucion normal, es necesario que todas las variables verifiquen normalidad univariante, ya que es una condicion necesaria (aunque no suficiente). Por lo tanto rechazamos la hipotesis de normalidad del conjunto de datos. 
+* Aún así, comprobaremos los resultados obtenidos mediante el Test de normalidad de Mardia:
+
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
+
+mardia(final)
+
+
+```
+* Tambien vamos a utilizar el test de Henze-Zirkler:
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
+h<-HZ.test(final, qqplot = TRUE)
+```
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
+h
+```
+* Como se puede comprobar, al ser el p-value menor de 0.05 en ambos test, los datos no se ajustan a una distribución normal.
+
+###Estudio de correlación
+* Para el estudio de la correlacion, utilizaremos el coeficiente de correlacion de Pearson (R). Mediante el siguiente grafico, vamos a observar las relaciones que las variables tienen entre si y con la variable final de "outcome":
+```{r , echo=FALSE}
+MCOR <- cor(final)
+#corrplot(MCOR, method = "number")
+corrplot.mixed(MCOR) # Display the correlation coefficient
+```
+
+
+* En este grafico podemos observar como por ejemplo las variables de "motor", "verbal" y "eye" tienen bastante relacion y dependencia entre si. Sin embargo hay algo que no nos cuadra y es que no existe una gran dependencia entre la variable "age" y la variable de "outcome", aspecto que podria ser mas sustancial en la naturaleza. 
+* Teniendo en cuenta los valores de la variable "outcome" (1 fallece y 0 vive), la correlacion negativa de las variable del test de glasgow (eye, motor, verbal) tiene sentido, puesto que en general, cuanto mayor sea el valor de estas variables, mejor pronostico de vida hay. La variable de "pupils" es al contrario, cuanto mayores sean sus valores, mas probable es el pronostico de fallecimiento.
+
+* A continuación se muestra un listado en orden descendente con las mayores correlaciones existentes:
+
+```{r , echo=FALSE}
+variablesmascorreladas <- function(mydataframe,numtoreport)
+  {
+     # find the correlations
+     cormatrix <- cor(mydataframe)
+     # set the correlations on the diagonal or lower triangle to zero,
+     # so they will not be reported as the highest ones:
+     diag(cormatrix) <- 0
+     cormatrix[lower.tri(cormatrix)] <- 0
+     # flatten the matrix into a dataframe for easy sorting
+     fm <- as.data.frame(as.table(cormatrix))
+     # assign human-friendly names
+     names(fm) <- c("First.Variable", "Second.Variable","Correlation")
+     # sort and print the top n correlations
+     head(fm[order(abs(fm$Correlation),decreasing=T),],n=numtoreport)
+}
+variablesmascorreladas(final,15)
+```
+* Las correlaciones entre las variables y la clase ordenadas en orden descendente son las siguientes:
+```{r , echo=FALSE}
+correlacionesconoutcome <- function(mydataframe,numtoreport)
+  {
+     # find the correlations
+     cormatrix <- cor(mydataframe)
+     # set the correlations on the diagonal or lower triangle to zero,
+     # so they will not be reported as the highest ones:
+     diag(cormatrix) <- 0
+     cormatrix[lower.tri(cormatrix)] <- 0
+     # flatten the matrix into a dataframe for easy sorting
+     fm <- as.data.frame(as.table(cormatrix))
+     # assign human-friendly names
+     names(fm) <- c("First.Variable", "Second.Variable","Correlation")
+     # sort and print the top n correlations
+     fm<-fm[fm$Second.Variable=="outcome",]
+     head(fm[order(abs(fm$Correlation),decreasing=T) ,],n=numtoreport)
+}
+correlacionesconoutcome(final,14)
+```
+#Selección de variables con más importancia. Uso de Random Forest
+* En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de Random Forest para posteriormente coger las variables mas importantes, que son las siguientes:
+```{r , echo=FALSE, include=FALSE}
+fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
+                   pupils+phm+sah+oblt+mdls+hmt,
+                 data=final)
+(VI_F=importance(fit))
+
+```
+```{r , echo=FALSE}
+head(VI_F[order(abs(VI_F),decreasing=T), ],14)
+```
