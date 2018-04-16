@@ -5,6 +5,10 @@ library(moments) ###REALIZA 1 PRUEBA DE NORMALIDAD###
 library(mvnTest)
 library(randomForest)
 library(rpart)
+
+library("devtools")
+library("factoextra")
+
 rm(list = ls())
 dev.off(dev.list()["RStudioGD"])
 
@@ -110,9 +114,9 @@ D2<-mahalanobis(final,mean,Sx)
 D2
 
 #http://www.cotradingclub.com/2017/05/25/prueba-de-normalidad-en-modelos-de-prediccion/
-jb.norm.test(final)
-hist(final$age)
-mardia(final)
+#jb.norm.test(final)
+#hist(final$age)
+#mardia(final)
 
 #Random Trees (Importance Variable) https://www.r-bloggers.com/variable-importance-plot-and-variable-selection/
 fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
@@ -130,7 +134,40 @@ fit=rpart(outcome ~sex+age+cause+ec+eye+motor+verbal+
 plot(fit)
 text(fit)
 
+barplot(t(VI_F/sum(VI_F)), horiz=TRUE)
 
+
+#ANALISIS PCA
+#Obtenemos las componentes principales, en principio son 14, que corresponde con el numero de variables
+pca.final <- prcomp(final,scale=FALSE)
+summary(pca.final)
+#En el siguiente grafico, vemos que
+#La primera componente captura 'casi toda' la variabilidad de los datos! 
+#Esto quiere decir que podríamos reducir las \(7\) variables originales a una sola variable (componente principal) 
+#manteniendo (prácticamente) constante la cantidad de información disponible con respecto al conjunto de datos originales.
+plot(pca.final)
+
+#Esto ocurre debido a las unidades en las que se miden las variables, que son distintas
+#Pero esto es debido exclusivamente al efecto de 'escala' con el que hemos medido los datos. 
+#Por ello, en vez de utilizar la matriz de covarianzas para hacer PCA, se utiliza la matriz de correlación:
+
+pca.final2 <- prcomp(final,scale=T)
+summary(pca.final2)
+#Al homogeneizar la 'escala' en la que hemos medido las variables, 
+#la distribución de la variabilidad entre las com ponentes parece más racional. 
+plot(pca.final2)
+pca.final2$sdev # Varianza de cada componente.
+
+pca.final2$rotation # cargas de cada componente.
+
+# plot method
+plot(pca.final2, type = "l")
+biplot(pca.final2, scale = 0)
+
+fviz_eig(pca.final2,ncp = 14)
+
+# plot percentage of variance explained for each principal component    
+barplot(100*p.variance.explained, las=2, xlab='', ylab='% Variance Explained')
 
 
 #Distancia de cooks para determinar los Outliers

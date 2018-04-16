@@ -19,6 +19,9 @@ library(dprep)
 library(corrplot)
 library(randomForest)
 library(rpart)
+library(devtools)
+library(factoextra)
+
 rm(list = ls())
 final <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 ```
@@ -176,3 +179,29 @@ fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
 ```{r , echo=FALSE}
 head(VI_F[order(abs(VI_F),decreasing=T), ],14)
 ```
+
+#Analisis de PCA
+* Un problema en el análisis de datos multivariante es la reducción de la dimensionalidad: es decir, si se puede conseguir  con precisión los valores de las variables (p)  con un pequeño subconjunto de ellas (r<p), habremos conseguido reducir la dimensión a costa de una pequeña perdida de información. 
+* El análisis de componentes principales tiene este objetivo. Dada n observaciones de p variables, se analiza si es posible representar adecuadamente esta información con un conjunto menor de variables (construidas como combinaciones lineales de las originales).  
+* El primer paso en el análisis de componentes principales consiste en la obtención de los valores y vectores propios de la matriz de covarianzas muestral o de la matriz de coeficientes de correlación que se obtienen a partir de los datos. En nuestro caso vamos a utilizar la matriz de correlaciones. 
+```{r echo=FALSE, , echo=FALSE}
+pca.final <- prcomp(final,scale=T)
+summary(pca.final)
+```
+
+* Para elegir nuestras componentes principales, podremos utilizar dos métodos: 
+* Por un lado, podemos utilizar el criterio de Kaiser, que consiste en conservar aquellos factores cuya desviación estándar al cuadrado asociada sea mayor que 1. 
+```{r echo=FALSE, , echo=FALSE}
+(pca.final$sdev)^2 
+```
+* Como se puede comprobar, utilizando este criterio, podriamos quedarnos con los componentes PC1,PC2,PC3,PC4 y PC5.
+* Otra forma para saber cuántos componentes tener en cuenta es mantener el número decomponentes necesarios para explicar al menos un porcentaje del total de la varianza. Por ejemplo, es importante explicar al menos un 80% de la varianza.
+```{r echo=FALSE, , echo=FALSE}
+get_eig(pca.final)
+```
+```{r echo=FALSE, , echo=FALSE}
+fviz_eig(pca.final,ncp = 14)
+```
+
+
+*Segun este criterio, deberiamos quedarnos con los primeros componentes principales: PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8 y PC9.
