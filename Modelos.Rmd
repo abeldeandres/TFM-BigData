@@ -19,11 +19,15 @@ library(dprep)
 library(corrplot)
 library(randomForest)
 library(rpart)
+library(rpart.plot)
 library(devtools)
 library(factoextra)
+library(corrplot)
+
+library(ggpubr)
 
 rm(list = ls())
-final <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 ```
 * Se ha realizado un diagrama de caja para el conjunto de nuestro dataset
 ```{r , echo=FALSE}
@@ -44,6 +48,16 @@ outliers
 ```{r , echo=FALSE}
 cor(final$age, final$outcome, method=c("pearson"))
 ```
+* Tambien vamos a observar como es la media y la mediana:
+* Media
+```{r , echo=FALSE}
+mean(final$age)
+```
+* Mediana
+```{r , echo=FALSE}
+median(final$age)
+```
+
 
 * Por tanto, hemos creado una funcion que nos elimine directamente los datos anomalos, es decir, todos aquellos datos que no se encuentren en el rango Q1-1.5·RIC o superiores a Q3+1.5·RIC se eliminaran. Siendo RIC el rango intercuartil (Q1-Q3)
 
@@ -58,7 +72,6 @@ eliminar_outliers <- function(x, na.rm = TRUE) {
 }
 
 final$age= eliminar_outliers(final$age)
-final$age= eliminar_outliers(final$age)
 final <- final[!is.na(final$age),]
 boxplot(final$age,  ylab = "age")
 ```
@@ -69,6 +82,18 @@ cor(final$age, final$outcome, method=c("pearson"))
 ```
 
 * Vemos que la correlacion ha empeorado un poco. De todas formas la correlacion entre la edad y el "outcome" es bastante debil.
+
+* Tambien vamos a observar como es la media y la mediana:
+* Media
+```{r , echo=FALSE}
+mean(final$age)
+```
+* Mediana
+```{r , echo=FALSE}
+median(final$age)
+```
+
+* Como se puede comprobar, la eliminacion de los outliers no ha afectado demasiado a las variables estadisticos.
 
 ###ANÁLISIS DE NORMALIDAD
 * En primer lugar, visualizaremos la densidad de nuestras variables (individualmente), con el objetivo de observar a simple vista si cumplen o no con una distribucion normal.
@@ -96,7 +121,7 @@ plot(density(final$outcome))
 ```
 
 
-* Como podemos comprobar, al tratarse de variables discretas (expceto la variable de edad -age-), no lograremos conseguir una distribucion normal de forma individual.
+* Como podemos comprobar, al tratarse de variables discretas (excepto la variable de edad -age-), no lograremos conseguir una distribucion normal de forma individual.
 * Otro aspecto a tener en cuenta es que para que un conjunto de datos (teniendo en cuenta todas las variables) posea una distribucion normal, es necesario que todas las variables verifiquen normalidad univariante, ya que es una condicion necesaria (aunque no suficiente). Por lo tanto rechazamos la hipotesis de normalidad del conjunto de datos. 
 * Aún así, comprobaremos los resultados obtenidos mediante el Test de normalidad de Mardia:
 
@@ -126,6 +151,35 @@ corrplot.mixed(MCOR) # Display the correlation coefficient
 
 * En este grafico podemos observar como por ejemplo las variables de "motor", "verbal" y "eye" tienen bastante relacion y dependencia entre si. Sin embargo hay algo que no nos cuadra y es que no existe una gran dependencia entre la variable "age" y la variable de "outcome", aspecto que podria ser mas sustancial en la naturaleza. 
 * Teniendo en cuenta los valores de la variable "outcome" (1 fallece y 0 vive), la correlacion negativa de las variable del test de glasgow (eye, motor, verbal) tiene sentido, puesto que en general, cuanto mayor sea el valor de estas variables, mejor pronostico de vida hay. La variable de "pupils" es al contrario, cuanto mayores sean sus valores, mas probable es el pronostico de fallecimiento.
+
+```{r , echo=FALSE}
+MCOR <- cor(final)
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+cex.before <- par("cex")
+par(cex = 0.5)
+corrplot(MCOR, method="color", col=col(200),  
+         type="upper", order="hclust", 
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col="black", tl.srt=45, tl.cex = 1/par("cex"), #Text label color and rotation
+         # hide correlation coefficient on the principal diagonal
+         diag=FALSE 
+         )
+```
+
+* Como se ha podido apreciar en las 2 graficas anteriores, existe una gran correlacion entre las variables "motor", "eye" y "verbal". 
+
+```{r , echo=FALSE}
+ggscatter(final, x = "verbal", y = "eye", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "verbal", ylab = "eye")
+```
+
+
+* En la grafica anterior podemos volver a comprobar que existe una gran relacion lineal positiva entre las variables mas correlacionadas que son "verbal" y "eye".
+
+* Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
+
 
 * A continuación se muestra un listado en orden descendente con las mayores correlaciones existentes:
 
@@ -179,6 +233,20 @@ fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
 ```{r , echo=FALSE}
 head(VI_F[order(abs(VI_F),decreasing=T), ],14)
 ```
+* El siguiente grafico representa la importancia de las variables segun su media y los valores de Random Forest mostrados anteriormente:
+```{r , echo=FALSE}
+varImpPlot(fit,type=2)
+```
+
+* Dibujamos el arbol resultante:
+
+```{r , echo=FALSE}
+fitpart=rpart(outcome ~sex+age+cause+ec+eye+motor+verbal+
+            pupils+phm+sah+oblt+mdls+hmt,
+          data=final)
+rpart.plot(fitpart)
+```
+
 
 #Analisis de PCA
 * Un problema en el análisis de datos multivariante es la reducción de la dimensionalidad: es decir, si se puede conseguir  con precisión los valores de las variables (p)  con un pequeño subconjunto de ellas (r<p), habremos conseguido reducir la dimensión a costa de una pequeña perdida de información. 
@@ -204,4 +272,9 @@ fviz_eig(pca.final,ncp = 14)
 ```
 
 
-*Segun este criterio, deberiamos quedarnos con los primeros componentes principales: PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8 y PC9.
+* Segun este criterio, deberiamos quedarnos con los primeros componentes principales: PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8 y PC9.
+ 
+* A continuacion, podremos ver la carga de cada variable respecto a las componentes principales.
+```{r echo=FALSE, , echo=FALSE}
+pca.final$rotation
+```
