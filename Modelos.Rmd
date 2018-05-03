@@ -178,10 +178,7 @@ ggscatter(final, x = "verbal", y = "eye",
 
 * En la grafica anterior podemos volver a comprobar que existe una gran relacion lineal positiva entre las variables mas correlacionadas que son "verbal" y "eye".
 
-* Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
-
-
-* A continuación se muestra un listado en orden descendente con las mayores correlaciones existentes:
+* A continuación, a modo de información, se muestra un listado en orden descendente con las mayores correlaciones existentes:
 
 ```{r , echo=FALSE}
 variablesmascorreladas <- function(mydataframe,numtoreport)
@@ -221,6 +218,9 @@ correlacionesconoutcome <- function(mydataframe,numtoreport)
 }
 correlacionesconoutcome(final,14)
 ```
+
+* Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
+
 #Selección de variables con más importancia. Uso de Random Forest
 * En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de Random Forest para posteriormente coger las variables mas importantes, que son las siguientes:
 ```{r , echo=FALSE, include=FALSE}
