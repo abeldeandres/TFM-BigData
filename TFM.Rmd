@@ -1,8 +1,9 @@
 ---
 title: "TFM"
 output:
-  html_document: default
+  word_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +15,7 @@ options(Encoding="UTF-8")
 
 
 ```{r , echo=FALSE}
-CRASH_data_1 <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/CRASH_data-1.csv",na.strings=c("","NA"))
+CRASH_data_1 <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/CRASH_data-1.csv",na.strings=c("","NA"))
 datos.modelo <- subset(CRASH_data_1, select = 
                          c(SEX,AGE,EO_Cause,EO_Major.EC.injury,GCS_EYE,GCS_MOTOR,GCS_VERBAL,
                            PUPIL_REACT_LEFT,PUPIL_REACT_RIGHT,EO_Head.CT.scan,EO_1.or.more.PH,
@@ -458,6 +459,11 @@ final$mdls[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$
 final$hmt<-NA
 final$hmt[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")] <- final$TH_Non.evac.haem[which(final$EO_Outcome=="2" & final$TH_Head.CT.scan=="1")]
 final$hmt[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")] <- final$EO_Non.evac.haem[which(final$EO_Outcome!="2"  | final$TH_Head.CT.scan!="1")]
+
+#Reemplazamos las variables de outcome de categoricas a variables numericas 0 y 1
+final$outcome[which(final$outcome=="D")] <- "1" #Fallece
+final$outcome[which(final$outcome=="MDGR")] <- "0" #Vive
+final$outcome<- as.integer(final$outcome)
 
 #Eliminamos las variables que no necesitemos y las cambiamos de nombre
 final <- subset(final, select = 
