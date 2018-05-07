@@ -17,14 +17,14 @@ library(moments) ###REALIZA 1 PRUEBA DE NORMALIDAD###
 library(mvnTest)
 library(dprep)
 library(corrplot)
-library(randomForest)
+library(randomForest) #random forest
 library(rpart)
 library(rpart.plot)
 library(devtools)
 library(factoextra)
-library(corrplot)
-
-library(ggpubr)
+library(corrplot) #correlaciones
+library(ggpubr) #correlaciones
+library(reshape) #random forest
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -219,34 +219,56 @@ correlacionesconoutcome <- function(mydataframe,numtoreport)
 correlacionesconoutcome(final,14)
 ```
 
-* Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
+* Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion y sea necesario la eliminacion de algunas de ellas. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
 
 #Selección de variables con más importancia. Uso de Random Forest
 * En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de Random Forest para posteriormente coger las variables mas importantes, que son las siguientes:
 ```{r , echo=FALSE, include=FALSE}
-fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
-                   pupils+phm+sah+oblt+mdls+hmt,
-                 data=final)
-(VI_F=importance(fit))
+fit=randomForest(outcome~.,data=final,importance=T)
+#(VI_F=importance(fit))
+#Creamos un objeto con las "importancias" de las variables
+importancia=data.frame(importance(fit))
+importancia<-sort_df(importancia,vars='IncNodePurity')
+importancia
+
+```
+```{r , echo=FALSE, include=FALSE}
+
 
 ```
 ```{r , echo=FALSE}
-head(VI_F[order(abs(VI_F),decreasing=T), ],14)
+#head(VI_F[order(abs(VI_F),decreasing=T), ],14)
+importancia
 ```
+* La variable IncNodePurity se la conoce tambien como la media de decrecimiento de de Gini.El indice de Gini es una "medida de desorden" en este caso "IncNodePurity" tiene el siguiente sentido, a mayor medida, mayor importancia en los modelos creados, puesto que valores proximos a 0 implican un mayor desorden. Por tanto, si computamos la media del "decrecimiento" del indice de Gini cuanto mayor sea esta medida, mas variabilidad aporta a la variable dependiente.
+
+* Por otro lado, la variable IncMSE es la media de decrecimiento en la precision, y es tambien un indicador sobre la importancia de las variables en el modelo.
+
 * El siguiente grafico representa la importancia de las variables segun su media y los valores de Random Forest mostrados anteriormente:
 ```{r , echo=FALSE}
-varImpPlot(fit,type=2)
+varImpPlot(fit)
 ```
 
-* Dibujamos el arbol resultante:
+* En general, se suele utilizar la raiz cuadrada del numero total de variables presentes en los datos. En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables: "age", "motor","verbal" y "eye"
+
+
+* A continuacion se va a utilizar un arbol de clasificación, que nos mostrara la importancia de las variables segun este algoritmo de clasificacion.
 
 ```{r , echo=FALSE}
-fitpart=rpart(outcome ~sex+age+cause+ec+eye+motor+verbal+
-            pupils+phm+sah+oblt+mdls+hmt,
-          data=final)
-rpart.plot(fitpart)
+fitpart=rpart(outcome ~.,
+          data=final,parms = list(split = "gini"),maxdepth= 10)
+rpart.plot(fitpart, type=4)
 ```
 
+```{r , echo=FALSE}
+fitpart
+```
+
+* Si recordamos, un resultado en el "outcome" de 0 eran aquellos pacientes que a los 6 meses habian vivido mientras quen un resultado de 1, significaba que los pacientes fallecian.Teniendo en cuenta este dato, podemos observar que los nodos del arbol son aquellas variables que el algoritmo considera mas relevantes y que hacen que un paciente viva o fallezca.
+
+* La interpretacion que se da al arbol es la siguiente: Cada nodo contiene el porcentaje de informacion que contiene ademas de la media de la variable "outcome" en cada particion. Por ejemplo, la media de "outcome" es de 0.4, que coincide con el 0.4 del nodo raiz. Sin embargo, cuando la variable "motor" es mayor de 4.5, entonces el numero de datos se reduce al 64% y la media de "outcome" se vuelve a 0.26, significando para este caso que la mayoria de los pacientes viven, puesto que se aproxima a 0.
+
+* Como conclusiones, utilizaremos las variables que se han considerado como mas importantes en el algoritmo del arbol de clasificacion y son las siguientes: "motor","age", "pupils","verbal" y "mdls".
 
 #Analisis de PCA
 * Un problema en el análisis de datos multivariante es la reducción de la dimensionalidad: es decir, si se puede conseguir  con precisión los valores de las variables (p)  con un pequeño subconjunto de ellas (r<p), habremos conseguido reducir la dimensión a costa de una pequeña perdida de información. 

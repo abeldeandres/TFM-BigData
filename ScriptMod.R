@@ -5,6 +5,8 @@ library(moments) ###REALIZA 1 PRUEBA DE NORMALIDAD###
 library(mvnTest)
 library(randomForest)
 library(rpart)
+library(rpart.plot)
+library(mvShapiroTest)
 
 library("devtools")
 library("factoextra")
@@ -12,7 +14,7 @@ library("factoextra")
 rm(list = ls())
 dev.off(dev.list()["RStudioGD"])
 
-final <- read.csv("C:/Users/Marta.Rodriguez/Desktop/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 
 #Coeficiente de correlacion de Pearson R
 MCOR <- cor(final)
@@ -71,7 +73,7 @@ corrplot(MCOR, method = "number") # Display the correlation coefficient
 #result <- mvn(data = final[1:5000, ], mvnTest = "hz")
 HZ.test(final, qqplot = TRUE)
 
-mshapiro.test(as.matrix(final[,1:14]))
+mvShapiro.Test(as.matrix(final[,1:14]))
 #ANALISIS DE NORMALIDAD
 par(mfrow=c(2,2))
 plot(density(final$sex))
@@ -119,20 +121,30 @@ D2
 #mardia(final)
 
 #Random Trees (Importance Variable) https://www.r-bloggers.com/variable-importance-plot-and-variable-selection/
-fit=randomForest(outcome ~sex+age+cause+ec+eye+motor+verbal+
-                   pupils+phm+sah+oblt+mdls+hmt,
+fit1=randomForest(outcome ~.,
                  data=final)
-(VI_F=importance(fit))
+importancia=data.frame(importance(fit1))
+
+importancia<-sort_df(importancia,vars='IncNodePurity')
+importancia
+
+VI_F=importance(fit1)
 View(VI_F[order(abs(VI_F),decreasing=T),])
+
 #El siguiente grafico representa la importancia
 #de las variables segun su media y los valores del Random Forest
-varImpPlot(fit,type=2)
+varImpPlot(fit1,type=2)
 
 fit=rpart(outcome ~sex+age+cause+ec+eye+motor+verbal+
             pupils+phm+sah+oblt+mdls+hmt,
           data=final)
-plot(fit)
-text(fit)
+
+rpart.plot(fit)
+printcp(fit)
+fit
+
+##plot(fit)
+#text(fit)
 
 barplot(t(VI_F/sum(VI_F)), horiz=TRUE)
 
