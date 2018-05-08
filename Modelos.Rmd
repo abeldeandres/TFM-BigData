@@ -25,6 +25,7 @@ library(factoextra)
 library(corrplot) #correlaciones
 library(ggpubr) #correlaciones
 library(reshape) #random forest
+library(corpcor) #correlaciones parciales
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -141,7 +142,8 @@ h
 * Como se puede comprobar, al ser el p-value menor de 0.05 en ambos test, los datos no se ajustan a una distribución normal.
 
 ###Estudio de correlación
-* Para el estudio de la correlacion, utilizaremos el coeficiente de correlacion de Pearson (R). Mediante el siguiente grafico, vamos a observar las relaciones que las variables tienen entre si y con la variable final de "outcome":
+* Para el estudio de la correlacion, utilizaremos el coeficiente de correlacion de Pearson (R). Mediante el siguiente grafico, vamos a observar las relaciones que tienen los pares de variables entre si.
+
 ```{r , echo=FALSE}
 MCOR <- cor(final)
 #corrplot(MCOR, method = "number")
@@ -177,6 +179,18 @@ ggscatter(final, x = "verbal", y = "eye",
 
 
 * En la grafica anterior podemos volver a comprobar que existe una gran relacion lineal positiva entre las variables mas correlacionadas que son "verbal" y "eye".
+
+* Matriz de Correlaciones Parciales
+```{r , echo=FALSE}
+matrizCorrelacionesParciales=cor2pcor(cor(final))
+#corrplot.mixed(matrizCorrelacionesParciales, label=labels("hola")) 
+colnames(matrizCorrelacionesParciales) <- c("sex", "age", "cause", "ec", "eye","motor", "verbal", "pupils", "phm","sah", "oblt", "mdls", "hmt", "outcome")
+rownames(matrizCorrelacionesParciales) <- c("sex", "age", "cause", "ec", "eye","motor", "verbal", "pupils", "phm","sah", "oblt", "mdls", "hmt", "outcome")
+
+
+corrplot.mixed(matrizCorrelacionesParciales) # Display the correlation
+```
+* Con la matriz de correlaciones parciales, obtendremos las correlaciones parciales que existe entre los pares de variables eliminando el efecto de las restantes. Vemos que las correlaciones fuertes se encuentran entre los mismos pares de variables que en la matriz de correlación total.
 
 * A continuación, a modo de información, se muestra un listado en orden descendente con las mayores correlaciones existentes:
 
@@ -271,6 +285,10 @@ fitpart
 * Como conclusiones, utilizaremos las variables que se han considerado como mas importantes en el algoritmo del arbol de clasificacion y son las siguientes: "motor","age", "pupils","verbal" y "mdls".
 
 #Analisis de PCA
+* En primer lugar, antes de proceder con el analisis de componentes principales, vamos a tener en cuenta la matriz de correlaciones, puesto que un PCA tiene sentido si existen altas correlaciones entre las variables, ya que como se ha comentado con anteriorirdad, esto es indicativo de que existe informacion redundante y, por tanto, pocos factores explicaran gran parte de la variabilidad total.
+
+* Como ya vimos con las matrices de correlaciones solo obtuvimos correlaciones medianamente fuertes entre las variables de "motor", "eye" y "verbal", pero la correlacion no era significativa por lo que no se descarto ninguna variable.
+
 * Un problema en el análisis de datos multivariante es la reducción de la dimensionalidad: es decir, si se puede conseguir  con precisión los valores de las variables (p)  con un pequeño subconjunto de ellas (r<p), habremos conseguido reducir la dimensión a costa de una pequeña perdida de información. 
 * El análisis de componentes principales tiene este objetivo. Dada n observaciones de p variables, se analiza si es posible representar adecuadamente esta información con un conjunto menor de variables (construidas como combinaciones lineales de las originales).  
 * El primer paso en el análisis de componentes principales consiste en la obtención de los valores y vectores propios de la matriz de covarianzas muestral o de la matriz de coeficientes de correlación que se obtienen a partir de los datos. En nuestro caso vamos a utilizar la matriz de correlaciones. 
@@ -293,10 +311,13 @@ get_eig(pca.final)
 fviz_eig(pca.final,ncp = 14)
 ```
 
-
 * Segun este criterio, deberiamos quedarnos con los primeros componentes principales: PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8 y PC9.
  
 * A continuacion, podremos ver la carga de cada variable respecto a las componentes principales.
 ```{r echo=FALSE, , echo=FALSE}
 pca.final$rotation
 ```
+
+  * Como conclusiones teniendo en cuenta el PCA y las matrices de correlaciones, no se puede descartar ninguna variable por los siguientes motivos:
+    + Las correlaciones entre las variables "eye", "motor" y "verbal" no son lo suficientemente fuertes como para considerar que existe informacion redundante.El resto de pares de variables tienen una correlacion poco significativa.
+    + Los criterios utilizados para elegir las componentes principales nos han indicado que se necesitan al menos 5 componentes Principales usando el criterio de Kaiser y 9 utilizando el criterio del 80% de la proporcion de la varianza. Teniendo en cuenta que poseemos 14 variables, la reducción no es significativa. 
