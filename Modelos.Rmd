@@ -94,7 +94,7 @@ mean(final$age)
 median(final$age)
 ```
 
-* Como se puede comprobar, la eliminacion de los outliers no ha afectado demasiado a las variables estadisticos.
+* Como se puede comprobar, la eliminacion de los outliers no ha afectado demasiado a las variables estadisticos por lo que no existe motivo para su eliminación.
 
 ###ANÁLISIS DE NORMALIDAD
 * En primer lugar, visualizaremos la densidad de nuestras variables (individualmente), con el objetivo de observar a simple vista si cumplen o no con una distribucion normal.
