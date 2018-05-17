@@ -236,7 +236,36 @@ correlacionesconoutcome(final,14)
 * Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion y sea necesario la eliminacion de algunas de ellas. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
 
 #Selección de variables con más importancia. Uso de Random Forest
-* En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de Random Forest para posteriormente coger las variables mas importantes, que son las siguientes:
+* En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de Random Forest para posteriormente coger las variables mas importantes.
+
+* La idea que existe detras de los "Random Forest" es generar un numero importante de arboles, entrenarlos y calcular el promedio de su salida.
+
+
+* En cada iteracion del algoritmo de "Random Forest" se genera un error conocido como OOB, este error ira aumentando o disminuyendo en cada iteracion y por cada incremento de variables.
+
+*En cada paso (nodo) se recalcula el conjunto de "m" predictores permitidos. Lo más típico es elegir la raiz cuadrada del numero total de variables.En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables (redondeando hacia arriba en caso de no ser un número entero) en el caso de árboles de clasificación y m=p/3 en el caso de árboles de regresión. Siendo "p" el numero de variables.
+
+```{r , echo=FALSE, include=FALSE}
+tune=tuneRF(x = final,       # data set de entrenamiento 
+       y = final$outcome,  # variable a predecir
+       mtryStart  = 1,   # cantidad de variables inicial 
+       stepFactor = 2,   # incremento de variables
+       ntreeTry   = 200, # cantidad arboles a ejecutar en cada iteracion
+       improve    = .01  # mejora minina del OOB para seguir iteraciones
+      )
+```
+
+```{r , echo=FALSE}
+plot(tune,type="o")
+```
+
+```{r , echo=FALSE}
+print(tune)
+```
+
+* Como se puede comprobar, el error OOB, se estabiliza, indicando cuantas particiones se deben realizar para obtener los mejores resutlados. En este caso, con 4 variables seria suficiente.
+
+* Las variables mas importantes son las siguientes:
 ```{r , echo=FALSE, include=FALSE}
 fit=randomForest(outcome~.,data=final,importance=T)
 #(VI_F=importance(fit))
@@ -244,16 +273,12 @@ fit=randomForest(outcome~.,data=final,importance=T)
 importancia=data.frame(importance(fit))
 importancia<-sort_df(importancia,vars='IncNodePurity')
 importancia
-
-```
-```{r , echo=FALSE, include=FALSE}
-
-
 ```
 ```{r , echo=FALSE}
 #head(VI_F[order(abs(VI_F),decreasing=T), ],14)
 importancia
 ```
+
 * La variable IncNodePurity se la conoce tambien como la media de decrecimiento de de Gini.El indice de Gini es una "medida de desorden" en este caso "IncNodePurity" tiene el siguiente sentido, a mayor medida, mayor importancia en los modelos creados, puesto que valores proximos a 0 implican un mayor desorden. Por tanto, si computamos la media del "decrecimiento" del indice de Gini cuanto mayor sea esta medida, mas variabilidad aporta a la variable dependiente.
 
 * Por otro lado, la variable IncMSE es la media de decrecimiento en la precision, y es tambien un indicador sobre la importancia de las variables en el modelo.
@@ -290,11 +315,38 @@ fitpart
 * Como ya vimos con las matrices de correlaciones solo obtuvimos correlaciones medianamente fuertes entre las variables de "motor", "eye" y "verbal", pero la correlacion no era significativa por lo que no se descarto ninguna variable.
 
 * Un problema en el análisis de datos multivariante es la reducción de la dimensionalidad: es decir, si se puede conseguir  con precisión los valores de las variables (p)  con un pequeño subconjunto de ellas (r<p), habremos conseguido reducir la dimensión a costa de una pequeña perdida de información. 
-* El análisis de componentes principales tiene este objetivo. Dada n observaciones de p variables, se analiza si es posible representar adecuadamente esta información con un conjunto menor de variables (construidas como combinaciones lineales de las originales).  
-* El primer paso en el análisis de componentes principales consiste en la obtención de los valores y vectores propios de la matriz de covarianzas muestral o de la matriz de coeficientes de correlación que se obtienen a partir de los datos. En nuestro caso vamos a utilizar la matriz de correlaciones. 
+
+* El análisis de componentes principales tiene este objetivo. Dada n observaciones de p variables, se analiza si es posible representar adecuadamente esta información con un conjunto menor de variables (construidas como combinaciones lineales de las originales).
+
+* El primer paso en el análisis de componentes principales consiste en la obtención de los valores y vectores propios de la matriz de covarianzas muestral o de la matriz de coeficientes de correlación que se obtienen a partir de los datos. 
+
+* Debemos saber que el analisis de componentes principales utiliza la versión normalizada de los predictores originales. Estas variables pueden encontrarse en distintas escalas (kilometros, litros, euros, etc.) y por lo tanto, las varianzas tambien tendran varias escalas.
+
+* Realizar el PCA en variables no normalizadas dara lugar a que haya cargas bastante grandes para variables con una varianza alta y a su vez, esto llevará a la dependencia de una componente principal con la variable con la varianza mas alta. Esto no es deseable. Por lo que se llevara a cabo una homogeneización de las variables. Al homogeneizar la 'escala' en la que hemos medido las variables, la distribución de la variabilidad entre las componentes parece más racional.
+
+* Veamos que ocurre si utilizamos la matriz de covarianza, sin haber normalizado -escalado- las variables:
+```{r echo=FALSE, , echo=FALSE}
+pca.finalCOV <- prcomp(final,scale=FALSE)
+plot(pca.finalCOV)
+```
+
+```{r echo=FALSE, , echo=FALSE}
+biplot(pca.finalCOV, scale = 0)
+```
+
+* Como se puede comprobar en la grafica anterior, al no haber escalado las variables, la primera componente principal (PC1) esta dominada por la variable "age", mientras que la segunda componente principal esta dominada por las variables: "eye", "motor" y "verbal".
+
+* Ahora vamos a utilizar la matriz de varianzas, habiendo normalizado todas las variables.
 ```{r echo=FALSE, , echo=FALSE}
 pca.final <- prcomp(final,scale=T)
 summary(pca.final)
+```
+```{r echo=FALSE, , echo=FALSE}
+plot(pca.final)
+```
+
+```{r echo=FALSE, , echo=FALSE}
+biplot(pca.final, scale = 0)
 ```
 
 * Para elegir nuestras componentes principales, podremos utilizar dos métodos: 
@@ -320,4 +372,4 @@ pca.final$rotation
 
   * Como conclusiones teniendo en cuenta el PCA y las matrices de correlaciones, no se puede descartar ninguna variable por los siguientes motivos:
     + Las correlaciones entre las variables "eye", "motor" y "verbal" no son lo suficientemente fuertes como para considerar que existe informacion redundante.El resto de pares de variables tienen una correlacion poco significativa.
-    + Los criterios utilizados para elegir las componentes principales nos han indicado que se necesitan al menos 5 componentes Principales usando el criterio de Kaiser y 9 utilizando el criterio del 80% de la proporcion de la varianza. Teniendo en cuenta que poseemos 14 variables, la reducción no es significativa. 
+    + Los criterios utilizados para elegir las componentes principales nos han indicado que se necesitan al menos 5 componentes Principales usando el criterio de Kaiser y 9 utilizando el criterio del 80% de la proporcion de la varianza. Teniendo en cuenta que poseemos 14 variables, la reducción no es significativa y se perderia interpretabilidad.
