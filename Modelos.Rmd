@@ -243,31 +243,36 @@ correlacionesconoutcome(final,14)
 
 * En cada iteracion del algoritmo de "Random Forest" se genera un error conocido como OOB, este error ira aumentando o disminuyendo en cada iteracion y por cada incremento de variables.
 
-*En cada paso (nodo) se recalcula el conjunto de "m" predictores permitidos. Lo más típico es elegir la raiz cuadrada del numero total de variables.En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables (redondeando hacia arriba en caso de no ser un número entero) en el caso de árboles de clasificación y m=p/3 en el caso de árboles de regresión. Siendo "p" el numero de variables.
+* En cada paso (nodo) se recalcula el conjunto de "m" predictores permitidos. Lo más típico es elegir la raiz cuadrada del numero total de variables.En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables (redondeando hacia arriba en caso de no ser un número entero) en el caso de árboles de clasificación y m=p/3 en el caso de árboles de regresión. Siendo "p" el numero de variables.
+
+* Aun asi, es necesario calcular la variable "mtry", puesto que es el único parámetro ajustable al cual los bosques aleatorios son algo sensibles. El "mtry" es el número de variables aleatorias utilizadas en cada árbol. La reduccion del "mtry" reduce tanto la correlación como la fuerza, aumentando ambas en caso contrario.
+
+* En algún punto intermedio hay un rango 'óptimo' de "mtry"", generalmente bastante ancho.Usando la tasa de error de OOB, se puede encontrar rápidamente un valor de mínimo en el rango.
 
 ```{r , echo=FALSE, include=FALSE}
-tune=tuneRF(x = final,       # data set de entrenamiento 
+mtry=tuneRF(x = final,       # data set de entrenamiento 
        y = final$outcome,  # variable a predecir
        mtryStart  = 1,   # cantidad de variables inicial 
        stepFactor = 2,   # incremento de variables
-       ntreeTry   = 200, # cantidad arboles a ejecutar en cada iteracion
+       ntreeTry   = 500, # cantidad arboles a ejecutar en cada iteracion
        improve    = .01  # mejora minina del OOB para seguir iteraciones
       )
+best.m <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
 ```
 
 ```{r , echo=FALSE}
-plot(tune,type="o")
+plot(mtry,type="o")
 ```
 
 ```{r , echo=FALSE}
-print(tune)
+print(mtry)
 ```
 
-* Como se puede comprobar, el error OOB, se estabiliza, indicando cuantas particiones se deben realizar para obtener los mejores resutlados. En este caso, con 4 variables seria suficiente.
+* Como se puede comprobar, el error OOB, se estabiliza, indicando cuantas particiones se deben realizar para obtener los mejores resultados En este caso, con 4 variables seria suficiente (puesto que es el numero donde se estabiliza el error OOB).
 
-* Las variables mas importantes son las siguientes:
+* Las variables mas importantes utilizando el "mtry" son las siguientes:
 ```{r , echo=FALSE, include=FALSE}
-fit=randomForest(outcome~.,data=final,importance=T)
+fit=randomForest(outcome~.,data=final,importance=T,ntree=500, mtry=best.m)
 #(VI_F=importance(fit))
 #Creamos un objeto con las "importancias" de las variables
 importancia=data.frame(importance(fit))
@@ -287,8 +292,6 @@ importancia
 ```{r , echo=FALSE}
 varImpPlot(fit)
 ```
-
-* En general, se suele utilizar la raiz cuadrada del numero total de variables presentes en los datos. En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables: "age", "motor","verbal" y "eye"
 
 
 * A continuacion se va a utilizar un arbol de clasificación, que nos mostrara la importancia de las variables segun este algoritmo de clasificacion.
