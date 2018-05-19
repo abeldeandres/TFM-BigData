@@ -1,0 +1,146 @@
+---
+title: "ModelosII"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(Encoding="UTF-8")
+
+```
+
+```{r , echo=FALSE, include=FALSE}
+library(caTools)
+library(caret)
+library(randomForest)
+library(neuralnet)
+library(nnet)
+set.seed(42)
+rm(list = ls())
+final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+
+```
+## TERMINOS GENERALES
+### Matriz de confusión
+  * Una matriz de confusión es una tabla que se usa a menudo para describir el rendimiento de un modelo de clasificación sobre en un conjunto de datos de prueba para los cuales se conocen los valores verdaderos.
+
+  * Definamos ahora los términos más básicos para nuestro estudio:
+    + Verdaderos Positivos (TP): estos son casos en los que predijimos que sí (van a fallecer), y sí fallecen.
+    + Verdaderos Negativos (TN): Predijimos que no iban a fallecer, y los pacientes no fallecen.
+    + Falsos Positivos (FP): Predijimos que sí iban a fallecer, pero en realidad no han fallecido.
+    + Falsos Negativos (FN): Predijimos que no, pero en realidad tienen la enfermedad.
+    
+  * En nuestro estudio se ha tomado como positivo, el valor de "1", es decir, que el paciente fallezca.
+  
+  * Otra información a tener en cuenta en los siguientes graficos:
+    + Reference 0, Prediction 0 -> Verdaderos Negativos (TN).
+    + Reference 1, Prediction 0 -> Falsos Negativos (FN)
+    + Reference 0, Prediction 1 -> Falsos Positivos (FP)
+    + Reference 1, Prediction 1 -> Verdaderos Positivos (TP)
+    
+## Datos de entrenamiento y test
+* En primer lugar, diviremos los datos en un conjunto de entreno (train) y un conjunto de pruebas (test). Tenemos 6930 registros por lo que la mitad seran datos para probar (3465) y la otra mitad datos de entrenamiento del modelo.
+
+## 1 FALLECE, 0 VIVE
+
+```{r , echo=FALSE}
+final$outcome<-as.factor(final$outcome)
+ind<-sample.split(Y=final$outcome,SplitRatio =0.7)
+train <- final[ind,]
+test <- final[!ind,]
+
+```
+
+## REGRESION LOGISTICA 
+### Usando todos los predictores
+* En primer lugar vamos a construir nuestro modelo de regresion logistica con los datos de entrenamiento.
+```{r , echo=FALSE}
+modelo.logit <- glm(outcome ~ ., 
+                    data = train, family = "binomial")
+summary(modelo.logit)
+```
+
+* Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
+```{r , echo=FALSE}
+options(warn=-1) 
+pred <- predict(modelo.logit, newdata = test, type = "response")  # predicted probabilities
+options(warn=1) 
+
+out_pred_num <- ifelse(pred > 0.5, 1, 0)
+out_pred <- factor(out_pred_num, levels=c(0, 1))
+confusionMatrix<-confusionMatrix(data = out_pred, reference = test$outcome,positive="1")
+confusionMatrix
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrix$table)
+```
+
+* Como podemos comprobar, el modelo se ajusta bastante bien, con un 76%. Dicho de otra forma, el modelo es capaz de predecir correctamente un 76% de los datos de los pacientes.
+
+### Eliminando los predictores "sex" y "cause""
+* Al igual que hicimos en el modelo anterior, vamos a construir el modelo eliminando las variables de "sex" y "cause"
+```{r , echo=FALSE}
+modelo.logit2 <- glm(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt, 
+                    data = train, family = "binomial")
+summary(modelo.logit2)
+```
+
+* Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
+```{r , echo=FALSE}
+options(warn=-1) 
+pred2 <- predict(modelo.logit2, newdata = test, type = "response")  # predicted probabilities
+options(warn=1) 
+
+out_pred_num2 <- ifelse(pred2 > 0.5, 1, 0)
+out_pred2 <- factor(out_pred_num2, levels=c(0, 1))
+confusionMatrix2<-confusionMatrix(data = out_pred2, reference = test$outcome,positive="1")
+confusionMatrix2
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrix2$table)
+```
+
+* Como podemos comprobar, aunque el AIC ha mejorado (reducido su valor) utilizando este modelo (sin las variables de sexo y causa) respecto al modelo con todas las variables, ha empeorado las prediciones.
+
+
+## RANDOM FOREST u otros modelos de arboles (GBM, Adaboost, XGBM, etc.)
+
+* El modelo de Random Forest tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en la regresion logistica.
+```{r , echo=FALSE}
+model.RF=randomForest(outcome~.,data=train,ntree=500)
+print(model.RF)
+```
+
+* Despues de construir el modelo, vamos a utilizar los datos de test para predecirlo. Comprobaremos una vez mas el ajuste de este.
+
+```{r , echo=FALSE}
+pred <- predict(model.RF, newdata = test)
+confusionMatrix<-confusionMatrix(data=pred,reference=test$outcome,positive="1")
+confusionMatrix
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrix$table)
+```
+
+## Redes de neuronas
+
+```{r , echo=FALSE}
+model.nn = nnet(outcome ~ ., data = train, size = 2, rang = 0.1, decay = 5e-4, maxit = 200)
+print(model.nn)
+```
+
+```{r , echo=FALSE}
+model.predict = predict(model.nn, test, type="class")
+model.predict<-as.factor(model.predict)
+confusionMatrixNET<-confusionMatrix(data=model.predict,reference=test$outcome,positive="1")
+confusionMatrixNET
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixNET$table)
+```
+
+
