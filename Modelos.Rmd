@@ -26,6 +26,7 @@ library(corrplot) #correlaciones
 library(ggpubr) #correlaciones
 library(reshape) #random forest
 library(corpcor) #correlaciones parciales
+library(MASS) #Stepwise
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -45,22 +46,22 @@ outliers<-boxplot(final$age,  ylab = "age")
 outliers<-outliers$out
 outliers
 ```
-* Antes de proceder a eliminar los datos anomalos, vamos a ver la correlacion existente con la variable de "Outcome";
+  * Antes de proceder a eliminar los datos anomalos, vamos a ver la correlacion existente con la variable de *"Outcome"*:
 ```{r , echo=FALSE}
 cor(final$age, final$outcome, method=c("pearson"))
 ```
-* Tambien vamos a observar como es la media y la mediana:
-* Media
-```{r , echo=FALSE}
-mean(final$age)
-```
-* Mediana
-```{r , echo=FALSE}
-median(final$age)
-```
+  * Tambien vamos a observar como es la media y la mediana:
+    + Media
+    ```{r , echo=FALSE}
+      mean(final$age)
+    ```
+    + Mediana
+    ```{r , echo=FALSE}
+      median(final$age)
+    ```
 
 
-* Por tanto, hemos creado una funcion que nos elimine directamente los datos anomalos, es decir, todos aquellos datos que no se encuentren en el rango Q1-1.5·RIC o superiores a Q3+1.5·RIC se eliminaran. Siendo RIC el rango intercuartil (Q1-Q3)
+  * Por tanto, hemos creado una funcion que nos elimine directamente los datos anomalos, es decir, todos aquellos datos que no se encuentren en el rango Q1-1.5·RIC o superiores a Q3+1.5·RIC se eliminaran. Siendo RIC el rango intercuartil (Q1-Q3)
 
 ```{r , echo=FALSE}
 eliminar_outliers <- function(x, na.rm = TRUE) {
@@ -77,27 +78,28 @@ final <- final[!is.na(final$age),]
 boxplot(final$age,  ylab = "age")
 ```
 
-* Ahora veamos la correlacion posterior a la eliminacion de los datos anomalos con la variable de "Outcome";
+  * Ahora veamos la correlacion posterior a la eliminacion de los datos anomalos con la variable de *"Outcome"*;
 ```{r , echo=FALSE}
 cor(final$age, final$outcome, method=c("pearson"))
 ```
 
-* Vemos que la correlacion ha empeorado un poco. De todas formas la correlacion entre la edad y el "outcome" es bastante debil.
+  * Vemos que la correlacion ha empeorado un poco. De todas formas la correlacion entre la edad y el *"outcome"* es bastante debil.
+  
+  * Tambien vamos a observar como es la media y la mediana:
+    + Media
+    ```{r , echo=FALSE}
+      mean(final$age)
+    ```
+    + Mediana
+    ```{r , echo=FALSE}
+      median(final$age)
+    ```
 
-* Tambien vamos a observar como es la media y la mediana:
-* Media
-```{r , echo=FALSE}
-mean(final$age)
-```
-* Mediana
-```{r , echo=FALSE}
-median(final$age)
-```
-
-* Como se puede comprobar, la eliminacion de los outliers no ha afectado demasiado a las variables estadisticos por lo que no existe motivo para su eliminación.
+  * Como se puede comprobar, la eliminación de los *outliers* no ha afectado demasiado a las variables estadisticos por lo que no existe motivo para su eliminación.
 
 ###ANÁLISIS DE NORMALIDAD
-* En primer lugar, visualizaremos la densidad de nuestras variables (individualmente), con el objetivo de observar a simple vista si cumplen o no con una distribucion normal.
+
+  * En primer lugar, visualizaremos la densidad de nuestras variables (individualmente), con el objetivo de observar a simple vista si cumplen o no con una distribucion normal.
 
 
 ```{r , echo=FALSE}
@@ -122,9 +124,9 @@ plot(density(final$outcome))
 ```
 
 
-* Como podemos comprobar, al tratarse de variables discretas (excepto la variable de edad -age-), no lograremos conseguir una distribucion normal de forma individual.
-* Otro aspecto a tener en cuenta es que para que un conjunto de datos (teniendo en cuenta todas las variables) posea una distribucion normal, es necesario que todas las variables verifiquen normalidad univariante, ya que es una condicion necesaria (aunque no suficiente). Por lo tanto rechazamos la hipotesis de normalidad del conjunto de datos. 
-* Aún así, comprobaremos los resultados obtenidos mediante el Test de normalidad de Mardia:
+  * Como podemos comprobar, al tratarse de variables discretas (excepto la variable de edad -*age*-), no lograremos conseguir una distribucion normal de forma individual.
+  * Otro aspecto a tener en cuenta es que para que un conjunto de datos (teniendo en cuenta todas las variables) posea una distribucion normal, es necesario que todas las variables verifiquen normalidad univariante, ya que es una condicion necesaria (aunque no suficiente). Por lo tanto rechazamos la hipotesis de normalidad del conjunto de datos. 
+  * Aún así, comprobaremos los resultados obtenidos mediante el Test de normalidad de Mardia:
 
 ```{r eval=FALSE, , echo=FALSE, include=FALSE}
 
@@ -132,17 +134,18 @@ mardia(final)
 
 
 ```
-* Tambien vamos a utilizar el test de Henze-Zirkler:
+  * Tambien vamos a utilizar el test de Henze-Zirkler:
 ```{r eval=FALSE, , echo=FALSE, include=FALSE}
 h<-HZ.test(final, qqplot = TRUE)
 ```
 ```{r eval=FALSE, , echo=FALSE, include=FALSE}
 h
 ```
-* Como se puede comprobar, al ser el p-value menor de 0.05 en ambos test, los datos no se ajustan a una distribución normal.
+  * Como se puede comprobar, al ser el p-value menor de 0.05 en ambos test, los datos no se ajustan a una distribución normal.
 
 ###Estudio de correlación
-* Para el estudio de la correlacion, utilizaremos el coeficiente de correlacion de Pearson (R). Mediante el siguiente grafico, vamos a observar las relaciones que tienen los pares de variables entre si.
+
+* Para el estudio de la correlacion, utilizaremos el **coeficiente de correlacion de Pearson (R)**. Mediante el siguiente grafico, vamos a observar las relaciones que tienen los pares de variables entre si.
 
 ```{r , echo=FALSE}
 MCOR <- cor(final)
@@ -151,8 +154,9 @@ corrplot.mixed(MCOR) # Display the correlation coefficient
 ```
 
 
-* En este grafico podemos observar como por ejemplo las variables de "motor", "verbal" y "eye" tienen bastante relacion y dependencia entre si. Sin embargo hay algo que no nos cuadra y es que no existe una gran dependencia entre la variable "age" y la variable de "outcome", aspecto que podria ser mas sustancial en la naturaleza. 
-* Teniendo en cuenta los valores de la variable "outcome" (1 fallece y 0 vive), la correlacion negativa de las variable del test de glasgow (eye, motor, verbal) tiene sentido, puesto que en general, cuanto mayor sea el valor de estas variables, mejor pronostico de vida hay. La variable de "pupils" es al contrario, cuanto mayores sean sus valores, mas probable es el pronostico de fallecimiento.
+  * En este grafico podemos observar como por ejemplo las variables de *"motor"*, *"verbal"* y *"eye"* tienen bastante relacion y dependencia entre si. Sin embargo hay algo que no nos cuadra y es que no existe una gran dependencia entre la variable "age" y la variable de "outcome", aspecto que podria ser mas sustancial en la naturaleza.
+  
+  * Teniendo en cuenta los valores de la variable *"outcome"* (1 fallece y 0 vive), la correlacion negativa de las variable del test de glasgow (eye, motor, verbal) tiene sentido, puesto que en general, cuanto mayor sea el valor de estas variables, mejor pronostico de vida hay. La variable de "pupils" es al contrario, cuanto mayores sean sus valores, mas probable es el pronostico de fallecimiento.
 
 ```{r , echo=FALSE}
 MCOR <- cor(final)
@@ -168,7 +172,7 @@ corrplot(MCOR, method="color", col=col(200),
          )
 ```
 
-* Como se ha podido apreciar en las 2 graficas anteriores, existe una gran correlacion entre las variables "motor", "eye" y "verbal". 
+* Como se ha podido apreciar en las 2 graficas anteriores, existe una gran correlacion entre las variables *"motor"*, *"eye"* y *"verbal"*. 
 
 ```{r , echo=FALSE}
 ggscatter(final, x = "verbal", y = "eye", 
@@ -235,19 +239,20 @@ correlacionesconoutcome(final,14)
 
 * Por consiguiente consideramos que aunque exista una correlacion importante entre las variables "eye", "verbal" y "motor", no es lo suficientemente fuerte como para concluir que estas variables contienen la misma informacion y sea necesario la eliminacion de algunas de ellas. Por lo que no se procede a descartar ninguna de estas variables en estudios posteriores.
 
-#Selección de variables con más importancia. Uso de Random Forest
-* En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de Random Forest para posteriormente coger las variables mas importantes.
+#Selección de variables con más importancia. 
+## Uso de "Random Forest"
 
-* La idea que existe detras de los "Random Forest" es generar un numero importante de arboles, entrenarlos y calcular el promedio de su salida.
+* En este apartado, se buscara obtener un listado con las variables mas importantes, usando el algoritmo de *"Random Forest"* para posteriormente tener en cuenta posibles descartes de variables en estudios posteriores.
 
+* La idea que existe detras de los *"Random Forest"* es generar un numero importante de arboles, entrenarlos y calcular el promedio de su salida.
 
-* En cada iteracion del algoritmo de "Random Forest" se genera un error conocido como OOB, este error ira aumentando o disminuyendo en cada iteracion y por cada incremento de variables.
+* En cada iteracion del algoritmo de *"Random Forest"* se genera un error conocido como **OOB**, este error ira aumentando o disminuyendo en cada iteracion y por cada variable que se incluya en el algoritmo.
 
-* En cada paso (nodo) se recalcula el conjunto de "m" predictores permitidos. Lo más típico es elegir la raiz cuadrada del numero total de variables.En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables (redondeando hacia arriba en caso de no ser un número entero) en el caso de árboles de clasificación y m=p/3 en el caso de árboles de regresión. Siendo "p" el numero de variables.
+* En cada paso (nodo) se recalcula el conjunto de **"m"** predictores permitidos. Lo más típico es elegir la raiz cuadrada del numero total de variables.En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables (redondeando hacia arriba en caso de no ser un número entero) en el caso de **árboles de clasificación** y **m=p/3** en el caso de **árboles de regresión**. Siendo **"p"** el numero de variables.
 
-* Aun asi, es necesario calcular la variable "mtry", puesto que es el único parámetro ajustable al cual los bosques aleatorios son algo sensibles. El "mtry" es el número de variables aleatorias utilizadas en cada árbol. La reduccion del "mtry" reduce tanto la correlación como la fuerza, aumentando ambas en caso contrario.
+* Aun asi, es necesario calcular la variable **"mtry"**, puesto que es el único parámetro ajustable al cual los bosques aleatorios son algo sensibles. El "mtry" es el número de variables aleatorias utilizadas en cada árbol. La reduccion del "mtry" reduce tanto la correlación como la fuerza, aumentando ambas en caso contrario.
 
-* En algún punto intermedio hay un rango 'óptimo' de "mtry"", generalmente bastante ancho.Usando la tasa de error de OOB, se puede encontrar rápidamente un valor de mínimo en el rango.
+* En algún punto intermedio hay un rango "óptimo" de "mtry", generalmente bastante ancho.Usando la tasa de error de OOB, se puede encontrar rápidamente un valor de mínimo en el rango.
 
 ```{r , echo=FALSE, include=FALSE}
 mtry=tuneRF(x = final,       # data set de entrenamiento 
@@ -268,7 +273,7 @@ plot(mtry,type="o")
 print(mtry)
 ```
 
-* Como se puede comprobar, el error OOB, se estabiliza, indicando cuantas particiones se deben realizar para obtener los mejores resultados En este caso, con 4 variables seria suficiente (puesto que es el numero donde se estabiliza el error OOB).
+* Como se puede comprobar, el error OOB, se estabiliza, indicando cuantas particiones se deben realizar para obtener los mejores resultados En este caso, con **4 variables sería suficiente** (puesto que es el numero donde se estabiliza el error OOB).
 
 * Las variables mas importantes utilizando el "mtry" son las siguientes:
 ```{r , echo=FALSE, include=FALSE}
@@ -276,7 +281,7 @@ fit=randomForest(outcome~.,data=final,importance=T,ntree=500, mtry=best.m)
 #(VI_F=importance(fit))
 #Creamos un objeto con las "importancias" de las variables
 importancia=data.frame(importance(fit))
-importancia<-sort_df(importancia,vars='IncNodePurity')
+importancia<-sort_df(importancia,vars='X.IncMSE')
 importancia
 ```
 ```{r , echo=FALSE}
@@ -284,11 +289,12 @@ importancia
 importancia
 ```
 
-* La variable IncNodePurity se la conoce tambien como la media de decrecimiento de de Gini.El indice de Gini es una "medida de desorden" en este caso "IncNodePurity" tiene el siguiente sentido, a mayor medida, mayor importancia en los modelos creados, puesto que valores proximos a 0 implican un mayor desorden. Por tanto, si computamos la media del "decrecimiento" del indice de Gini cuanto mayor sea esta medida, mas variabilidad aporta a la variable dependiente.
+* La variable **"IncNodePurity"** se la conoce tambien como la media de decrecimiento de de Gini. El indice de Gini es una "medida de desorden" en este caso *"IncNodePurity"* tiene el siguiente sentido, a mayor medida, mayor importancia en los modelos creados, puesto que valores proximos a 0 implican un mayor desorden. Por tanto, si computamos la media del "decrecimiento" del indice de Gini cuanto mayor sea esta medida, mas variabilidad aporta a la variable dependiente.
 
-* Por otro lado, la variable IncMSE es la media de decrecimiento en la precision, y es tambien un indicador sobre la importancia de las variables en el modelo.
+* Por otro lado, la variable **"IncMSE"** es la media de decrecimiento en la precision, y es tambien un indicador sobre la importancia de las variables en el modelo.
 
-* El siguiente grafico representa la importancia de las variables segun su media y los valores de Random Forest mostrados anteriormente:
+* El siguiente grafico representa la importancia de las variables segun su media y los valores de *"Random Forest"* mostrados anteriormente:
+
 ```{r , echo=FALSE}
 varImpPlot(fit)
 ```
@@ -306,16 +312,36 @@ rpart.plot(fitpart, type=4)
 fitpart
 ```
 
-* Si recordamos, un resultado en el "outcome" de 0 eran aquellos pacientes que a los 6 meses habian vivido mientras quen un resultado de 1, significaba que los pacientes fallecian.Teniendo en cuenta este dato, podemos observar que los nodos del arbol son aquellas variables que el algoritmo considera mas relevantes y que hacen que un paciente viva o fallezca.
+* Si recordamos, un resultado en el *"outcome"* de 0 eran aquellos pacientes que a los 6 meses habian vivido mientras quen un resultado de 1, significaba que los pacientes fallecian.Teniendo en cuenta este dato, podemos observar que los nodos del arbol son aquellas variables que el algoritmo considera mas relevantes y que hacen que un paciente viva o fallezca.
 
-* La interpretacion que se da al arbol es la siguiente: Cada nodo contiene el porcentaje de informacion que contiene ademas de la media de la variable "outcome" en cada particion. Por ejemplo, la media de "outcome" es de 0.4, que coincide con el 0.4 del nodo raiz. Sin embargo, cuando la variable "motor" es mayor de 4.5, entonces el numero de datos se reduce al 64% y la media de "outcome" se vuelve a 0.26, significando para este caso que la mayoria de los pacientes viven, puesto que se aproxima a 0.
+* La interpretacion que se da al arbol es la siguiente: Cada nodo contiene el porcentaje de informacion que contiene ademas de la media de la variable *"outcome"* en cada particion. Por ejemplo, la media de *"outcome"* es de 0.4, que coincide con el 0.4 del nodo raiz. Sin embargo, cuando la variable *"motor"* es mayor de 4.5, entonces el numero de datos se reduce al 64% y la media de *"outcome"* se vuelve a 0.26, significando para este caso que la mayoria de los pacientes viven, puesto que se aproxima a 0.
 
-* Como conclusiones, utilizaremos las variables que se han considerado como mas importantes en el algoritmo del arbol de clasificacion y son las siguientes: "motor","age", "pupils","verbal" y "mdls".
+* Como conclusiones, utilizaremos las variables que se han considerado como mas importantes en el algoritmo del arbol de clasificacion y son las siguientes: *"motor"*,*"age"*, *"pupils"*,*"verbal"* y *"mdls"*.
+
+## Uso del método de regresión paso a paso (Stepwise Regression)
+
+* Este método es uno de los que se utilizan en la seleccion algoritmica del modelo. Se utiliza para identificar aquellas variables que se deberan integrar o no en los modelos a estudiar.
+
+*La logica subyaciente de este algoritmo consiste en conservar las variables independientes que contienen informacion relevante y a la vez prescindir de aquellas que resulten redundantes respecto de las que quedaron en el modelo.
+
+```{r , echo=FALSE}
+full <- glm(outcome~.,family=binomial, data= final)
+summary(full)
+```
+* Como podemos comprobar a simple vista, todas las variables son estadisticamente significante excepto "age" y "cause", cuyo p-valor es mayor a 0.05.
+
+* A continuacion utilizamos el algoritmo de regresion paso a paso:
+
+```{r , echo=FALSE}
+step<-stepAIC(full,trace=FALSE)
+step$anova
+```
+* Una vez mas podemos comprobar que las variables de *"cause"* y *"sex"* son las que se descartan usando este algoritmo.
 
 #Analisis de PCA
 * En primer lugar, antes de proceder con el analisis de componentes principales, vamos a tener en cuenta la matriz de correlaciones, puesto que un PCA tiene sentido si existen altas correlaciones entre las variables, ya que como se ha comentado con anteriorirdad, esto es indicativo de que existe informacion redundante y, por tanto, pocos factores explicaran gran parte de la variabilidad total.
 
-* Como ya vimos con las matrices de correlaciones solo obtuvimos correlaciones medianamente fuertes entre las variables de "motor", "eye" y "verbal", pero la correlacion no era significativa por lo que no se descarto ninguna variable.
+* Como ya vimos con las matrices de correlaciones solo obtuvimos correlaciones medianamente fuertes entre las variables de *"motor"*, *"eye"* y *"verbal"*, pero la correlación no era significativa por lo que no se descartó ninguna variable.
 
 * Un problema en el análisis de datos multivariante es la reducción de la dimensionalidad: es decir, si se puede conseguir  con precisión los valores de las variables (p)  con un pequeño subconjunto de ellas (r<p), habremos conseguido reducir la dimensión a costa de una pequeña perdida de información. 
 
@@ -327,7 +353,7 @@ fitpart
 
 * Realizar el PCA en variables no normalizadas dara lugar a que haya cargas bastante grandes para variables con una varianza alta y a su vez, esto llevará a la dependencia de una componente principal con la variable con la varianza mas alta. Esto no es deseable. Por lo que se llevara a cabo una homogeneización de las variables. Al homogeneizar la 'escala' en la que hemos medido las variables, la distribución de la variabilidad entre las componentes parece más racional.
 
-* Veamos que ocurre si utilizamos la matriz de covarianza, sin haber normalizado -escalado- las variables:
+* Veamos que ocurre si utilizamos la **matriz de covarianza**, sin haber normalizado -escalado- las variables:
 ```{r echo=FALSE, , echo=FALSE}
 pca.finalCOV <- prcomp(final,scale=FALSE)
 plot(pca.finalCOV)
@@ -337,9 +363,9 @@ plot(pca.finalCOV)
 biplot(pca.finalCOV, scale = 0)
 ```
 
-* Como se puede comprobar en la grafica anterior, al no haber escalado las variables, la primera componente principal (PC1) esta dominada por la variable "age", mientras que la segunda componente principal esta dominada por las variables: "eye", "motor" y "verbal".
+* Como se puede comprobar en la grafica anterior, al no haber escalado las variables, la primera componente principal (PC1) esta dominada por la variable *"age"*, mientras que la segunda componente principal esta dominada por las variables: *"eye"*, *"motor"* y *"verbal"*.
 
-* Ahora vamos a utilizar la matriz de varianzas, habiendo normalizado todas las variables.
+* Ahora vamos a utilizar la **matriz de varianzas**, habiendo normalizado todas las variables.
 ```{r echo=FALSE, , echo=FALSE}
 pca.final <- prcomp(final,scale=T)
 summary(pca.final)
@@ -352,27 +378,30 @@ plot(pca.final)
 biplot(pca.final, scale = 0)
 ```
 
-* Para elegir nuestras componentes principales, podremos utilizar dos métodos: 
-* Por un lado, podemos utilizar el criterio de Kaiser, que consiste en conservar aquellos factores cuya desviación estándar al cuadrado asociada sea mayor que 1. 
-```{r echo=FALSE, , echo=FALSE}
-(pca.final$sdev)^2 
-```
-* Como se puede comprobar, utilizando este criterio, podriamos quedarnos con los componentes PC1,PC2,PC3,PC4 y PC5.
-* Otra forma para saber cuántos componentes tener en cuenta es mantener el número decomponentes necesarios para explicar al menos un porcentaje del total de la varianza. Por ejemplo, es importante explicar al menos un 80% de la varianza.
-```{r echo=FALSE, , echo=FALSE}
-get_eig(pca.final)
-```
-```{r echo=FALSE, , echo=FALSE}
-fviz_eig(pca.final,ncp = 14)
-```
+  * Para elegir nuestras componentes principales, podremos utilizar dos métodos: 
+    + Por un lado, podemos utilizar el **criterio de Kaiser**, que consiste en conservar aquellos factores cuya desviación estándar al cuadrado asociada sea mayor que 1. 
+    
+    ```{r echo=FALSE, , echo=FALSE}
+        (pca.final$sdev)^2 
+    ```
+      Como se puede comprobar, utilizando este criterio, podriamos quedarnos con los componentes PC1,PC2,PC3,PC4 y PC5.
+    + Otra forma para saber cuántos componentes tener en cuenta es mantener el número decomponentes necesarios para explicar al menos un porcentaje del total de la varianza. Por ejemplo, es importante **explicar al menos un 80%** de la varianza.
+    
+    ```{r echo=FALSE, , echo=FALSE}
+      get_eig(pca.final)
+    ```
+    ```{r echo=FALSE, , echo=FALSE}
+      fviz_eig(pca.final,ncp = 14)
+    ```
 
 * Segun este criterio, deberiamos quedarnos con los primeros componentes principales: PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8 y PC9.
  
 * A continuacion, podremos ver la carga de cada variable respecto a las componentes principales.
+
 ```{r echo=FALSE, , echo=FALSE}
 pca.final$rotation
 ```
 
   * Como conclusiones teniendo en cuenta el PCA y las matrices de correlaciones, no se puede descartar ninguna variable por los siguientes motivos:
-    + Las correlaciones entre las variables "eye", "motor" y "verbal" no son lo suficientemente fuertes como para considerar que existe informacion redundante.El resto de pares de variables tienen una correlacion poco significativa.
-    + Los criterios utilizados para elegir las componentes principales nos han indicado que se necesitan al menos 5 componentes Principales usando el criterio de Kaiser y 9 utilizando el criterio del 80% de la proporcion de la varianza. Teniendo en cuenta que poseemos 14 variables, la reducción no es significativa y se perderia interpretabilidad.
+    + Las correlaciones entre las variables *"eye"*, *"motor"* y *"verbal"* no son lo suficientemente fuertes como para considerar que existe informacion redundante.El resto de pares de variables tienen una correlacion poco significativa.
+    + Los criterios utilizados para elegir las componentes principales nos han indicado que se necesitan al menos 5 componentes principales usando el criterio de Kaiser y 9 utilizando el criterio del 80% de la proporcion de la varianza. Teniendo en cuenta que poseemos 14 variables, la reducción no es significativa y se perderia interpretabilidad.
