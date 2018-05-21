@@ -351,23 +351,33 @@ step$anova
 
 * Debemos saber que el analisis de componentes principales utiliza la versión normalizada de los predictores originales. Estas variables pueden encontrarse en distintas escalas (kilometros, litros, euros, etc.) y por lo tanto, las varianzas tambien tendran varias escalas.
 
-* Realizar el PCA en variables no normalizadas dara lugar a que haya cargas bastante grandes para variables con una varianza alta y a su vez, esto llevará a la dependencia de una componente principal con la variable con la varianza mas alta. Esto no es deseable. Por lo que se llevara a cabo una homogeneización de las variables. Al homogeneizar la 'escala' en la que hemos medido las variables, la distribución de la variabilidad entre las componentes parece más racional.
+* Realizar el PCA con variables no normalizadas dara lugar a que haya cargas bastante grandes para variables con una varianza alta y a su vez, esto llevará a la dependencia de una componente principal con la variable con la varianza mas alta. Esto no es deseable. Por lo que se llevara a cabo una normalización de las variables. Al normalizar las variables, la distribución de la variabilidad entre las componentes parece más racional.
 
-* Veamos que ocurre si utilizamos la **matriz de covarianza**, sin haber normalizado -escalado- las variables:
 ```{r echo=FALSE, , echo=FALSE}
-pca.finalCOV <- prcomp(final,scale=FALSE)
-plot(pca.finalCOV)
+#Max-Min Normalization
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+finalNorm <- as.data.frame(lapply(final, normalize))
+```
+
+* Veamos que ocurre si utilizamos la **matriz de covarianza**, sin haber normalizado las variables:
+```{r echo=FALSE, , echo=FALSE}
+pca.final<- prcomp(final,scale=FALSE)
+summary(pca.final)
+plot(pca.final)
 ```
 
 ```{r echo=FALSE, , echo=FALSE}
-biplot(pca.finalCOV, scale = 0)
+biplot(pca.final, scale = 0)
 ```
 
 * Como se puede comprobar en la grafica anterior, al no haber escalado las variables, la primera componente principal (PC1) esta dominada por la variable *"age"*, mientras que la segunda componente principal esta dominada por las variables: *"eye"*, *"motor"* y *"verbal"*.
 
-* Ahora vamos a utilizar la **matriz de varianzas**, habiendo normalizado todas las variables.
+* Ahora vamos a utilizar la **matriz de covarianza**, habiendo normalizado todas las variables.
 ```{r echo=FALSE, , echo=FALSE}
-pca.final <- prcomp(final,scale=T)
+pca.final <- prcomp(finalNorm)
 summary(pca.final)
 ```
 ```{r echo=FALSE, , echo=FALSE}
@@ -377,6 +387,8 @@ plot(pca.final)
 ```{r echo=FALSE, , echo=FALSE}
 biplot(pca.final, scale = 0)
 ```
+
+* Como se puede comprobar en la grafica anterior, al normalizar las variables, vemos que el peso de estas se distribuye de forma mas uniforme entre las 2 componentes principales.
 
   * Para elegir nuestras componentes principales, podremos utilizar dos métodos: 
     + Por un lado, podemos utilizar el **criterio de Kaiser**, que consiste en conservar aquellos factores cuya desviación estándar al cuadrado asociada sea mayor que 1. 
