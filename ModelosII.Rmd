@@ -13,11 +13,14 @@ options(Encoding="UTF-8")
 library(caTools)
 library(caret)
 library(randomForest)
-library(neuralnet)
 library(nnet)
-set.seed(42)
+library(neuralnet)
+library(party) #ctree
+library(gbm)
+
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+
 
 ```
 ## TERMINOS GENERALES
@@ -39,12 +42,13 @@ final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv"
     + Reference 1, Prediction 1 -> Verdaderos Positivos (TP)
     
 ## Datos de entrenamiento y test
-* En primer lugar, diviremos los datos en un conjunto de entreno (train) y un conjunto de pruebas (test). Tenemos 6930 registros por lo que la mitad seran datos para probar (3465) y la otra mitad datos de entrenamiento del modelo.
+* En primer lugar, diviremos los datos en un conjunto de entreno (train) y un conjunto de pruebas (test). Tenemos 6930 registros por lo que el 30% son datos de prueba (2096) y el 70% datos de entrenamiento del modelo (4890).
 
-## 1 FALLECE, 0 VIVE
 
 ```{r , echo=FALSE}
+#Cambiamos la variable outcome a factor para trabajar con el modelo
 final$outcome<-as.factor(final$outcome)
+set.seed(42)
 ind<-sample.split(Y=final$outcome,SplitRatio =0.7)
 train <- final[ind,]
 test <- final[!ind,]
@@ -55,6 +59,7 @@ test <- final[!ind,]
 ### Usando todos los predictores
 * En primer lugar vamos a construir nuestro modelo de regresion logistica con los datos de entrenamiento.
 ```{r , echo=FALSE}
+set.seed(42)
 modelo.logit <- glm(outcome ~ ., 
                     data = train, family = "binomial")
 summary(modelo.logit)
@@ -68,8 +73,10 @@ options(warn=1)
 
 out_pred_num <- ifelse(pred > 0.5, 1, 0)
 out_pred <- factor(out_pred_num, levels=c(0, 1))
+
 confusionMatrix<-confusionMatrix(data = out_pred, reference = test$outcome,positive="1")
 confusionMatrix
+
 ```
 
 ```{r , echo=FALSE}
@@ -81,6 +88,7 @@ fourfoldplot(confusionMatrix$table)
 ### Eliminando los predictores "sex" y "cause""
 * Al igual que hicimos en el modelo anterior, vamos a construir el modelo eliminando las variables de "sex" y "cause"
 ```{r , echo=FALSE}
+set.seed(42)
 modelo.logit2 <- glm(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt, 
                     data = train, family = "binomial")
 summary(modelo.logit2)
@@ -94,8 +102,10 @@ options(warn=1)
 
 out_pred_num2 <- ifelse(pred2 > 0.5, 1, 0)
 out_pred2 <- factor(out_pred_num2, levels=c(0, 1))
+
 confusionMatrix2<-confusionMatrix(data = out_pred2, reference = test$outcome,positive="1")
 confusionMatrix2
+
 ```
 
 ```{r , echo=FALSE}
@@ -109,6 +119,7 @@ fourfoldplot(confusionMatrix2$table)
 
 * El modelo de Random Forest tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en la regresion logistica.
 ```{r , echo=FALSE}
+set.seed(42)
 model.RF=randomForest(outcome~.,data=train,ntree=500)
 print(model.RF)
 ```
@@ -116,26 +127,102 @@ print(model.RF)
 * Despues de construir el modelo, vamos a utilizar los datos de test para predecirlo. Comprobaremos una vez mas el ajuste de este.
 
 ```{r , echo=FALSE}
-pred <- predict(model.RF, newdata = test)
-confusionMatrix<-confusionMatrix(data=pred,reference=test$outcome,positive="1")
-confusionMatrix
+predRF <- predict(model.RF, newdata = test)
+confusionMatrixRF<-confusionMatrix(data=predRF,reference=test$outcome,positive="1")
+confusionMatrixRF
 ```
 
 ```{r , echo=FALSE}
-fourfoldplot(confusionMatrix$table)
+fourfoldplot(confusionMatrixRF$table)
+```
+
+
+## Arbol de decisión
+```{r , echo=FALSE}
+set.seed(42)
+train.ctree=ctree(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt+sex+cause, data=train)
+#train.ctree
+#plot(train.ctree, main="Árbol de decisión")
+```
+```{r , echo=FALSE}
+ctree.predict=predict(train.ctree,test)
+confusionMatrixCTREE<-confusionMatrix(data=ctree.predict,reference=test$outcome,positive="1")
+confusionMatrixCTREE
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixCTREE$table)
+```
+
+## GBM
+* El modelo de GBM tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en los modelos anteriores.
+
+```{r , echo=FALSE}
+#https://rpubs.com/omicsdata/gbm
+train$outcome<-as.numeric(train$outcome)
+train = transform(train, outcome=outcome-1)
+set.seed(42)
+model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=3000, verbose=F)
+model.gbm
+```
+* A continuacion mostramos un grafico con la mejor iteracion
+```{r , echo=FALSE}
+best.iter = gbm.perf(model.gbm, method="cv")
+```
+* Teniendo en cuenta el numero de iteracion, volvemos a crear el modelo con esta iteracion:
+```{r , echo=FALSE}
+set.seed(42)
+model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter, verbose=F)
+model.gbm
+```
+
+* El modelo tambien nos indica la importancia de los predictores:
+```{r , echo=FALSE}
+summary(model.gbm)
+```
+
+* Una vez mas, podemos comprobar que las variables "age" esta en la cabeza de las variables mas influyentes en el modelo y por el contrario la variable "sex", la que menos.
+
+
+```{r , echo=FALSE}
+model.predictGBM = predict(model.gbm, test, type="response")
+out_pred_numGBM <- ifelse(model.predictGBM > 0.5, 1, 0)
+out_predGBM <- factor(out_pred_numGBM, levels=c(0, 1))
+confusionMatrixGBM<-confusionMatrix(data = out_predGBM, reference = test$outcome,positive="1")
+confusionMatrixGBM
+```
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixGBM$table)
+```
+```{r , echo=FALSE}
+#Cambiamos el outcome a factor para futuras operaciones
+train$outcome<-as.factor(train$outcome)
 ```
 
 ## Redes de neuronas
 
 ```{r , echo=FALSE}
-model.nn = nnet(outcome ~ ., data = train, size = 2, rang = 0.1, decay = 5e-4, maxit = 200)
+set.seed(42)
+model.nn = nnet(outcome ~ ., data = train, size = 2, rang = 0.1, maxit = 200)
 print(model.nn)
 ```
 
+```{r , echo=FALSE, include=FALSE}
+#train$outcome<-as.numeric(train$outcome)
+#nn <- neuralnet(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt+sex+cause, data=train)
+#nn$result.matrix
+```
+
 ```{r , echo=FALSE}
-model.predict = predict(model.nn, test, type="class")
-model.predict<-as.factor(model.predict)
-confusionMatrixNET<-confusionMatrix(data=model.predict,reference=test$outcome,positive="1")
+#plot(nn)
+```
+
+```{r , echo=FALSE}
+model.predictNET = predict(model.nn, test)
+#model.predict<-as.factor(model.predict)
+out_pred_numNET <- ifelse(model.predictNET > 0.5, 1, 0)
+out_predNET <- factor(out_pred_numNET, levels=c(0, 1))
+confusionMatrixNET<-confusionMatrix(data=out_predNET,reference=test$outcome,positive="1")
 confusionMatrixNET
 ```
 
