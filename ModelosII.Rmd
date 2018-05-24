@@ -155,6 +155,29 @@ fourfoldplot(confusionMatrixCTREE$table)
 ```
 
 ## GBM
+* La idea general es obtener una secuencia de árboles (muy) simples, donde cada árbol sucesivo se construye con los residuos de predicción del árbol anterior.
+
+* Una vez generado los arboles uno a uno, se suman las predicciones de los árboles individuales:
+
+* D(x)= dtree1(x) + dtree2(x) + ...
+
+*  El siguiente árbol de decisiones -dtree3- intenta reducir la diferencia entre la función objetivo f(x) y la predicción del conjunto actual al reconstruir el residuo (dtree1 +dtree2).
+
+* Ademas, el siguiente árbol -dtree3- en el conjunto debe complementarse bien con los árboles existentes y minimizar el error de entrenamiento del conjunto.
+
+* D(x) + dtree3(x) = f(x)
+
+* Para acercarnos a una prediccion sin errores, entrenamos un árbol para reconstruir la diferencia entre la función objetivo y las predicciones actuales de un conjunto, esta diferencia se denomina residuo: 
+
+* R(x)= f(x) - D(x)
+
+* Como podemos observar, si el árbol de decisión reconstruye completamente R(x), todo el conjunto daria predicciones sin errores, es decir, predicciones exactas. Esto en la practica nunca sucede.
+
+* Uno de los principales problemas de todos los algoritmos de aprendizaje automático es 'saber cuándo detenerse', es decir, cómo evitar que el algoritmo de aprendizaje se ajuste tanto, que probablemente no mejore la validez predictiva del modelo. Este problema también se conoce como el problema del sobreajuste (overfitting).
+
+* Para establecer el limite de estos algoritmos, tenemos en cuenta la iteracion (numero de arboles) en la que se consigue un menor error.
+
+
 * El modelo de GBM tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en los modelos anteriores.
 
 ```{r , echo=FALSE}
