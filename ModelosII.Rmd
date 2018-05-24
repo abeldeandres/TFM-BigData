@@ -228,14 +228,28 @@ model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'berno
 model.gbm
 ```
 * A continuacion mostramos un grafico con la mejor iteracion para evitar el conocido sobreajuste (**overfitting**)
+* Utilizando OOB
 ```{r , echo=FALSE}
-best.iter = gbm.perf(model.gbm, method="cv")
+
+best.iter.oob <- gbm.perf(model.gbm,method="OOB")  # returns out-of-bag estimated best number of trees
+print(best.iter.oob)
+
 ```
+* Utilizando Cross validation
+```{r , echo=FALSE}
+
+best.iter.cv <- gbm.perf(model.gbm,method="cv")   # returns 5-fold cv estimate of best number of trees
+print(best.iter.cv)
+
+
+```
+
+* Hemos utilizado OOB ya que el numero de iteraciones es menor.
 
 * Teniendo en cuenta el numero optimo de iteraciones, volvemos a crear el modelo con este numero:
 ```{r , echo=FALSE}
 set.seed(42)
-model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter, verbose=F)
+model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter.oob, verbose=F)
 model.gbm
 ```
 
@@ -261,6 +275,8 @@ fourfoldplot(confusionMatrixGBM$table)
 #Cambiamos el outcome a factor para futuras operaciones
 train$outcome<-as.factor(train$outcome)
 ```
+* Como conclusiones, utilizando OOB, hemos obtenido una mejor precision. Con Cross Validation obtuvimos un 0.7676527% de precision mientras que con OOB obtuvimos 0.7719%.
+
 
 ## Redes de neuronas
 
