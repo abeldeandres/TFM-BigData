@@ -17,6 +17,8 @@ library(nnet)
 library(neuralnet)
 library(party) #ctree
 library(gbm)
+library(neuralnet)
+library(rfUtilities)
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -116,11 +118,48 @@ fourfoldplot(confusionMatrix2$table)
 
 
 ## RANDOM FOREST u otros modelos de arboles (GBM, Adaboost, XGBM, etc.)
+* Random forest es otra técnica de aprendizaje automático y nace como mejora sustancial de los árboles simples. Combina una cantidad grande de árboles de decisión independientes probados sobre conjuntos de datos aleatorios con igual distribución.
+
+  * La fase de aprendizaje consiste en crear una gran cantidad de árboles de decisión independientes. Estos arboles se construyen a partir de los datos de entrada ligeramente modificados. Se modifica el conjunto inicial de partida, de la siguiente forma:
+
+    + Se selecciona aleatoriamente con reemplazamiento un porcentaje de datos de la muestra total.
+
+  * Es habitual incluir un segundo nivel aleatoriedad, esta vez afectando los atributos:
+
+    + En cada nodo, al seleccionar la partición óptima, tenemos en cuenta sólo una porción de los atributos, elegidos al azar en cada ocasión.
+
+  * Una vez que se tienen muchos árboles -500 por ejemplo- la fase de clasificación se lleva a cabo de la siguiente manera:
+
+    + Cada árbol se evalúa de forma independiente y la predicción del bosque será la media de los 500 árboles. La proporción de árboles que toman una misma respuesta se interpreta como la probabilidad de la misma.
 
 * El modelo de Random Forest tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en la regresion logistica.
+
 ```{r , echo=FALSE}
 set.seed(42)
 model.RF=randomForest(outcome~.,data=train,ntree=500)
+print(model.RF)
+```
+
+```{r , echo=FALSE}
+train.RF<-train
+train.RF$outcome<-as.numeric(train.RF$outcome)
+mtry=tuneRF(x = train.RF,       # data set de entrenamiento 
+       y = train.RF$outcome,  # variable a predecir
+       mtryStart  = 1,   # cantidad de variables inicial 
+       stepFactor = 2,   # incremento de variables
+       ntreeTry   = 500, # cantidad arboles a ejecutar en cada iteracion
+       improve    = .01  # mejora minina del OOB para seguir iteraciones
+      )
+best.m <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
+print(mtry)
+```
+
+```{r , echo=FALSE}
+print(best.m)
+```
+* Una vez obtenido el optimo valor de mtry, vamos a volver a construir el modelo con el mtry optimo.
+```{r , echo=FALSE}
+model.RF=randomForest(outcome~.,data=final,importance=T,ntree=500, mtry=best.m)
 print(model.RF)
 ```
 
@@ -188,11 +227,12 @@ set.seed(42)
 model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=3000, verbose=F)
 model.gbm
 ```
-* A continuacion mostramos un grafico con la mejor iteracion
+* A continuacion mostramos un grafico con la mejor iteracion para evitar el conocido sobreajuste (**overfitting**)
 ```{r , echo=FALSE}
 best.iter = gbm.perf(model.gbm, method="cv")
 ```
-* Teniendo en cuenta el numero de iteracion, volvemos a crear el modelo con esta iteracion:
+
+* Teniendo en cuenta el numero optimo de iteraciones, volvemos a crear el modelo con este numero:
 ```{r , echo=FALSE}
 set.seed(42)
 model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter, verbose=F)
@@ -232,11 +272,12 @@ print(model.nn)
 
 ```{r , echo=FALSE, include=FALSE}
 #train$outcome<-as.numeric(train$outcome)
+#train = transform(train, outcome=outcome-1)
 #nn <- neuralnet(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt+sex+cause, data=train)
 #nn$result.matrix
 ```
 
-```{r , echo=FALSE}
+```{r , echo=FALSE,include=FALSE}
 #plot(nn)
 ```
 
