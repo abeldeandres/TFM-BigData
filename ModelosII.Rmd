@@ -17,8 +17,8 @@ library(nnet)
 library(neuralnet)
 library(party) #ctree
 library(gbm)
-library(neuralnet)
 library(rfUtilities)
+library(NeuralNetTools)
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -286,15 +286,8 @@ model.nn = nnet(outcome ~ ., data = train, size = 2, rang = 0.1, maxit = 200)
 print(model.nn)
 ```
 
-```{r , echo=FALSE, include=FALSE}
-#train$outcome<-as.numeric(train$outcome)
-#train = transform(train, outcome=outcome-1)
-#nn <- neuralnet(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt+sex+cause, data=train)
-#nn$result.matrix
-```
-
-```{r , echo=FALSE,include=FALSE}
-#plot(nn)
+```{r , echo=FALSE}
+plotnet(model.nn, alpha=0.6)
 ```
 
 ```{r , echo=FALSE}
