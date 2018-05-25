@@ -24,6 +24,7 @@ library(adabag) #adaboost
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+#final$outcome<-ifelse(final$outcome == "1", "F", "V")
 
 
 ```
@@ -347,8 +348,16 @@ train$outcome<-as.factor(train$outcome)
 
 * Como conclusiones, utilizando OOB, hemos obtenido una mejor precision. Con Cross Validation obtuvimos un 0.7676527% de precision mientras que con OOB obtuvimos 0.7719%.
 
-
 ## Redes de neuronas
+* Las redes neuronales son sistemas computacionales de aprendizaje basados en el funcionamiento de las redes neuronales biologicas presentes en el cerebro de los animales.
+
+* Estas redes estan construidas a partir de una serie de nodos llamados "neuronas" que se organizan en forma de capas. Existe una capa de entrada, una capa de salida y al menos una capa intermedia o capa "oculta".
+
+* La capa de entrada debe tener tantas neuronas como variables de entrada tenga el sistema que se va a modelar. La capa de salida debe tener tantas neuronas como variables que estemos intentando predecir, en nuestro caso solo una. 
+
+* En cuanto a las capas ocultas, sus neuronas realizan transformaciones no lineales sobre la informacion que los atraviesa mediante una funcion de activacion. Las salidas de estas funciones de activacion suelen variar entre 0 y 1. Si la informacion que entra en esta neurona supera un valor umbral, esta se activa o no. 
+
+* Las tareas de estas neuronas es realizar una suma ponderada de todas las entradas que tiene y aplicarle una funcion de activacion para posteriormente pasar el valor a las neuronas de la sigueinte capa, que a su vez repetiran el proceso.
 
 ```{r , echo=FALSE}
 set.seed(42)
