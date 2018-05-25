@@ -19,6 +19,8 @@ library(party) #ctree
 library(gbm)
 library(rfUtilities)
 library(NeuralNetTools)
+library(e1071)
+library(adabag) #adaboost
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -43,6 +45,22 @@ final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv"
     + Reference 0, Prediction 1 -> Falsos Positivos (FP)
     + Reference 1, Prediction 1 -> Verdaderos Positivos (TP)
     
+  * Estimadores de mejora
+    + Para modelos de regresion
+      + R2
+      + Root mean Square error
+      + Correlación de Spearman
+    + Para modelos de clasificacion
+      + Overall Accuracy
+      + Kappa Statistics
+      + Sensibilidad: nos indica la capacidad de nuestro estimador para dar como casos positivos los casos realmente positivos.Proporcion de fallecidos correctamente identificados. Si predice que fallece, entonces que realmente fallezca.
+      +Especificidad:nos indica la capacidad de nuestro estimador para dar como casos negativos los casos realmente negativos (que los usuarios esten vivos); proporción de vivos correctamente identificados.
+      
+### OVERFITTING     
+* El overfitting, tambien llamado sobreajuste: es el efecto que se da al entrenar de mas un algoritmo de aprendizaje, de este modo el algoritmo queda muy ajustado a caracteristicas muy especificas y por lo tanto, su respuesta a nuevos datos empeora.
+      
+* https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf
+
 ## Datos de entrenamiento y test
 * En primer lugar, diviremos los datos en un conjunto de entreno (train) y un conjunto de pruebas (test). Tenemos 6930 registros por lo que el 30% son datos de prueba (2096) y el 70% datos de entrenamiento del modelo (4890).
 
@@ -87,6 +105,27 @@ fourfoldplot(confusionMatrix$table)
 
 * Como podemos comprobar, el modelo se ajusta bastante bien, con un 76%. Dicho de otra forma, el modelo es capaz de predecir correctamente un 76% de los datos de los pacientes.
 
+#### Usando Cross Validation 10-fold
+
+```{r , echo=FALSE}
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
+mod_fit <- train(outcome ~ .,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5)
+```
+
+* Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
+
+```{r , echo=FALSE}
+predCV = predict(mod_fit, newdata=test)
+confusionMatrixCV<-confusionMatrix(data = predCV, reference = test$outcome,positive="1")
+confusionMatrixCV
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrix$table)
+```
+
+
 ### Eliminando los predictores "sex" y "cause""
 * Al igual que hicimos en el modelo anterior, vamos a construir el modelo eliminando las variables de "sex" y "cause"
 ```{r , echo=FALSE}
@@ -116,8 +155,8 @@ fourfoldplot(confusionMatrix2$table)
 
 * Como podemos comprobar, aunque el AIC ha mejorado (reducido su valor) utilizando este modelo (sin las variables de sexo y causa) respecto al modelo con todas las variables, ha empeorado las prediciones.
 
-
 ## RANDOM FOREST u otros modelos de arboles (GBM, Adaboost, XGBM, etc.)
+
 * Random forest es otra técnica de aprendizaje automático y nace como mejora sustancial de los árboles simples. Combina una cantidad grande de árboles de decisión independientes probados sobre conjuntos de datos aleatorios con igual distribución.
 
   * La fase de aprendizaje consiste en crear una gran cantidad de árboles de decisión independientes. Estos arboles se construyen a partir de los datos de entrada ligeramente modificados. Se modifica el conjunto inicial de partida, de la siguiente forma:
@@ -193,6 +232,29 @@ confusionMatrixCTREE
 fourfoldplot(confusionMatrixCTREE$table)
 ```
 
+## Adaboost
+
+* El algoritmo AdaBoost propone entrenar iterativamente una serie de clasificadores base, de tal modo que cada nuevo clasificador preste mayor atención a los datos clasificados erróneamente por los clasificadores anteriores, y combinarlos de tal modo que se obtenga un clasificador con elevadas prestaciones.
+
+* Las caracteristicas que lo convierten en un buen metodo son: su capacidad de evadir el **overfitting** y su menor porcentaje de error a cambio de tener un error mayor durante el entrenamiento.
+
+```{r , echo=FALSE}
+set.seed(42)
+adaboost<-boosting(outcome ~ ., data=train, boos=TRUE, mfinal=20,coeflearn='Breiman')
+#summary(adaboost)
+```
+* Despues de construir el modelo con los datos de entrenamiento y habiendo entrenado el modelo construido con los datos de prueba, obtenemos la matriz de confusion:
+
+```{r , echo=FALSE}
+adaboost.predict=predict(adaboost,test)
+confusionMatrixAdaBoost<-confusionMatrix(data=as.factor(adaboost.predict$class),reference=test$outcome,positive="1")
+confusionMatrixAdaBoost
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixAdaBoost$table)
+```
+
 ## GBM
 * La idea general es obtener una secuencia de árboles (muy) simples, donde cada árbol sucesivo se construye con los residuos de predicción del árbol anterior.
 
@@ -227,15 +289,20 @@ set.seed(42)
 model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=3000, verbose=F)
 model.gbm
 ```
+
 * A continuacion mostramos un grafico con la mejor iteracion para evitar el conocido sobreajuste (**overfitting**)
+
 * Utilizando OOB
+
 ```{r , echo=FALSE}
 
 best.iter.oob <- gbm.perf(model.gbm,method="OOB")  # returns out-of-bag estimated best number of trees
 print(best.iter.oob)
 
 ```
+
 * Utilizando Cross validation
+
 ```{r , echo=FALSE}
 
 best.iter.cv <- gbm.perf(model.gbm,method="cv")   # returns 5-fold cv estimate of best number of trees
@@ -254,6 +321,7 @@ model.gbm
 ```
 
 * El modelo tambien nos indica la importancia de los predictores:
+
 ```{r , echo=FALSE}
 summary(model.gbm)
 ```
@@ -271,10 +339,12 @@ confusionMatrixGBM
 ```{r , echo=FALSE}
 fourfoldplot(confusionMatrixGBM$table)
 ```
+
 ```{r , echo=FALSE}
 #Cambiamos el outcome a factor para futuras operaciones
 train$outcome<-as.factor(train$outcome)
 ```
+
 * Como conclusiones, utilizando OOB, hemos obtenido una mejor precision. Con Cross Validation obtuvimos un 0.7676527% de precision mientras que con OOB obtuvimos 0.7719%.
 
 
@@ -302,5 +372,7 @@ confusionMatrixNET
 ```{r , echo=FALSE}
 fourfoldplot(confusionMatrixNET$table)
 ```
+
+
 
 
