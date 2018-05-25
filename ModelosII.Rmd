@@ -24,7 +24,7 @@ library(adabag) #adaboost
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
-#final$outcome<-ifelse(final$outcome == "1", "F", "V")
+final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
 
 
 ```
@@ -93,9 +93,10 @@ pred <- predict(modelo.logit, newdata = test, type = "response")  # predicted pr
 options(warn=1) 
 
 out_pred_num <- ifelse(pred > 0.5, 1, 0)
-out_pred <- factor(out_pred_num, levels=c(0, 1))
-
-confusionMatrix<-confusionMatrix(data = out_pred, reference = test$outcome,positive="1")
+#out_pred <- factor(out_pred_num, levels=c(0, 1))
+out_pred<-as.factor(out_pred_num)
+levels(out_pred)=c("F","V")
+confusionMatrix<-confusionMatrix(data = out_pred, reference = test$outcome,positive="F")
 confusionMatrix
 
 ```
@@ -118,7 +119,7 @@ mod_fit <- train(outcome ~ .,data = train, method="glm", family="binomial",
 
 ```{r , echo=FALSE}
 predCV = predict(mod_fit, newdata=test)
-confusionMatrixCV<-confusionMatrix(data = predCV, reference = test$outcome,positive="1")
+confusionMatrixCV<-confusionMatrix(data = predCV, reference = test$outcome,positive="F")
 confusionMatrixCV
 ```
 
@@ -143,9 +144,11 @@ pred2 <- predict(modelo.logit2, newdata = test, type = "response")  # predicted 
 options(warn=1) 
 
 out_pred_num2 <- ifelse(pred2 > 0.5, 1, 0)
-out_pred2 <- factor(out_pred_num2, levels=c(0, 1))
+#out_pred2 <- factor(out_pred_num2, levels=c(0, 1))
+out_pred2<-as.factor(out_pred_num2)
+levels(out_pred2)=c("F","V")
 
-confusionMatrix2<-confusionMatrix(data = out_pred2, reference = test$outcome,positive="1")
+confusionMatrix2<-confusionMatrix(data = out_pred2, reference = test$outcome,positive="F")
 confusionMatrix2
 
 ```
@@ -207,7 +210,7 @@ print(model.RF)
 
 ```{r , echo=FALSE}
 predRF <- predict(model.RF, newdata = test)
-confusionMatrixRF<-confusionMatrix(data=predRF,reference=test$outcome,positive="1")
+confusionMatrixRF<-confusionMatrix(data=predRF,reference=test$outcome,positive="F")
 confusionMatrixRF
 ```
 
@@ -225,7 +228,7 @@ train.ctree=ctree(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt
 ```
 ```{r , echo=FALSE}
 ctree.predict=predict(train.ctree,test)
-confusionMatrixCTREE<-confusionMatrix(data=ctree.predict,reference=test$outcome,positive="1")
+confusionMatrixCTREE<-confusionMatrix(data=ctree.predict,reference=test$outcome,positive="F")
 confusionMatrixCTREE
 ```
 
@@ -248,7 +251,7 @@ adaboost<-boosting(outcome ~ ., data=train, boos=TRUE, mfinal=20,coeflearn='Brei
 
 ```{r , echo=FALSE}
 adaboost.predict=predict(adaboost,test)
-confusionMatrixAdaBoost<-confusionMatrix(data=as.factor(adaboost.predict$class),reference=test$outcome,positive="1")
+confusionMatrixAdaBoost<-confusionMatrix(data=as.factor(adaboost.predict$class),reference=test$outcome,positive="F")
 confusionMatrixAdaBoost
 ```
 
@@ -333,21 +336,55 @@ summary(model.gbm)
 ```{r , echo=FALSE}
 model.predictGBM = predict(model.gbm, test, type="response")
 out_pred_numGBM <- ifelse(model.predictGBM > 0.5, 1, 0)
-out_predGBM <- factor(out_pred_numGBM, levels=c(0, 1))
-confusionMatrixGBM<-confusionMatrix(data = out_predGBM, reference = test$outcome,positive="1")
+#out_predGBM <- factor(out_pred_numGBM, levels=c(0, 1))
+out_predGBM<-as.factor(out_pred_numGBM)
+levels(out_predGBM)=c("F","V")
+confusionMatrixGBM<-confusionMatrix(data = out_predGBM, reference = test$outcome,positive="F")
 confusionMatrixGBM
 ```
 ```{r , echo=FALSE}
 fourfoldplot(confusionMatrixGBM$table)
 ```
 
-```{r , echo=FALSE}
-#Cambiamos el outcome a factor para futuras operaciones
-train$outcome<-as.factor(train$outcome)
-```
+
 
 * Como conclusiones, utilizando OOB, hemos obtenido una mejor precision. Con Cross Validation obtuvimos un 0.7676527% de precision mientras que con OOB obtuvimos 0.7719%.
 
+## XGBOOST
+```{r , echo=FALSE}
+
+ControlParamteres <- trainControl(method = "cv",
+                                  number = 5, #usamos 5 fold cross-validation
+                                  savePredictions = TRUE,
+                                  classProbs = TRUE #give the probabilities for each class.Not just the class labels
+)
+
+ parametersGrid <-  expand.grid(eta = 0.1, 
+                            colsample_bytree=c(0.5,0.7),
+                            max_depth=c(3,6),
+                            nrounds=100,
+                            gamma=1,
+                            min_child_weight=2,
+                            subsample = 1
+                            )
+ modelxgboost <- train(outcome~., 
+                  data = train,
+                  method = "xgbTree",
+                  trControl = ControlParamteres,
+                  tuneGrid=parametersGrid)
+ modelxgboost
+```
+* Ahora predecimos
+```{r , echo=FALSE}
+predictions<-predict(modelxgboost,test)
+out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
+levels(out_predGBOOST)=c("F","V")
+confusionMatrixGBOOST<-confusionMatrix(data = out_predGBOOST, reference = test$outcome,positive="F")
+confusionMatrixGBOOST
+```
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixGBOOST$table)
+```
 ## Redes de neuronas
 * Las redes neuronales son sistemas computacionales de aprendizaje basados en el funcionamiento de las redes neuronales biologicas presentes en el cerebro de los animales.
 
@@ -371,10 +408,12 @@ plotnet(model.nn, alpha=0.6)
 
 ```{r , echo=FALSE}
 model.predictNET = predict(model.nn, test)
+
 #model.predict<-as.factor(model.predict)
-out_pred_numNET <- ifelse(model.predictNET > 0.5, 1, 0)
-out_predNET <- factor(out_pred_numNET, levels=c(0, 1))
-confusionMatrixNET<-confusionMatrix(data=out_predNET,reference=test$outcome,positive="1")
+out_pred_numNET<-as.factor(ifelse(model.predictNET > 0.5, 1, 0))
+levels(out_pred_numNET)=c("F","V")
+
+confusionMatrixNET<-confusionMatrix(data=out_pred_numNET,reference=test$outcome,positive="F")
 confusionMatrixNET
 ```
 
