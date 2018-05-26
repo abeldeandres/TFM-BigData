@@ -38,13 +38,13 @@ final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
     + Falsos Positivos (FP): Predijimos que sí iban a fallecer, pero en realidad no han fallecido.
     + Falsos Negativos (FN): Predijimos que no, pero en realidad tienen la enfermedad.
     
-  * En nuestro estudio se ha tomado como positivo, el valor de "1", es decir, que el paciente fallezca.
+  * En nuestro estudio se ha tomado como positivo, el valor de "F", es decir, que el paciente fallezca.
   
   * Otra información a tener en cuenta en los siguientes graficos:
-    + Reference 0, Prediction 0 -> Verdaderos Negativos (TN).
-    + Reference 1, Prediction 0 -> Falsos Negativos (FN)
-    + Reference 0, Prediction 1 -> Falsos Positivos (FP)
-    + Reference 1, Prediction 1 -> Verdaderos Positivos (TP)
+    + Reference V, Prediction V -> Verdaderos Negativos (TN).
+    + Reference F, Prediction V -> Falsos Negativos (FN)
+    + Reference V, Prediction F -> Falsos Positivos (FP)
+    + Reference F, Prediction F -> Verdaderos Positivos (TP)
     
   * Estimadores de mejora
     + Para modelos de regresion
@@ -59,7 +59,13 @@ final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
       
 ### OVERFITTING     
 * El overfitting, tambien llamado sobreajuste: es el efecto que se da al entrenar de mas un algoritmo de aprendizaje, de este modo el algoritmo queda muy ajustado a caracteristicas muy especificas y por lo tanto, su respuesta a nuevos datos empeora.
-      
+
+* Existen distintas tecnicas para evitar el sobreajuste:
+  + Cross-Validation: esta técnica consiste en dividir los datos en varios conjuntos de datos y luego elegir uno de los conjuntos para medir la precisión de la predicción "test" y el resto para entrenar.Concretamente se divide la muestra en K submuestras, de forma que se utilizan K-1 para estimar el modelo y la restante como submuestra de evaluación, este proceso se repite K veces, de forma que cada submuestra es utilizada una vez para evaluar el modelo y K-1 veces para el ajuste. 
+  + Detención temprana: proporciona información sobre cuántas iteraciones se pueden ejecutar antes de que el algoritmo de aprendizaje comience a sobrepasar el límite.
+  + Poda: Simplemente elimina los nodos que agregan poca capacidad de predicción para el problema en cuestión.
+  + Regularización: introduce un término de costo a la hora de obtener más variables con la función objetivo. Intenta reducir a cero los coeficientes de muchas variables consiguiendo asi reducir el término de costo.
+  
 * https://www.r-project.org/conferences/useR-2013/Tutorials/kuhn/user_caret_2up.pdf
 
 ## Datos de entrenamiento y test
@@ -196,20 +202,20 @@ mtry=tuneRF(x = train.RF,       # data set de entrenamiento
 best.m <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
 print(mtry)
 ```
-
+* Utilizamos el siguiente valor como "mtry".
 ```{r , echo=FALSE}
 print(best.m)
 ```
 * Una vez obtenido el optimo valor de mtry, vamos a volver a construir el modelo con el mtry optimo.
 ```{r , echo=FALSE}
-model.RF=randomForest(outcome~.,data=final,importance=T,ntree=500, mtry=best.m)
+model.RF2=randomForest(outcome~.,data=final,importance=T,ntree=500, mtry=best.m)
 print(model.RF)
 ```
 
 * Despues de construir el modelo, vamos a utilizar los datos de test para predecirlo. Comprobaremos una vez mas el ajuste de este.
 
 ```{r , echo=FALSE}
-predRF <- predict(model.RF, newdata = test)
+predRF <- predict(model.RF2, newdata = test)
 confusionMatrixRF<-confusionMatrix(data=predRF,reference=test$outcome,positive="F")
 confusionMatrixRF
 ```
@@ -287,10 +293,11 @@ fourfoldplot(confusionMatrixAdaBoost$table)
 
 ```{r , echo=FALSE}
 #https://rpubs.com/omicsdata/gbm
-train$outcome<-as.numeric(train$outcome)
-train = transform(train, outcome=outcome-1)
+trainGBM<-train
+trainGBM$outcome<-as.numeric(trainGBM$outcome)
+trainGBM = transform(trainGBM, outcome=outcome-1)
 set.seed(42)
-model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=3000, verbose=F)
+model.gbm = gbm(outcome ~ ., data = trainGBM, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=3000, verbose=F)
 model.gbm
 ```
 
@@ -320,7 +327,7 @@ print(best.iter.cv)
 * Teniendo en cuenta el numero optimo de iteraciones, volvemos a crear el modelo con este numero:
 ```{r , echo=FALSE}
 set.seed(42)
-model.gbm = gbm(outcome ~ ., data = train, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter.oob, verbose=F)
+model.gbm = gbm(outcome ~ ., data = trainGBM, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter.oob, verbose=F)
 model.gbm
 ```
 
@@ -351,6 +358,16 @@ fourfoldplot(confusionMatrixGBM$table)
 * Como conclusiones, utilizando OOB, hemos obtenido una mejor precision. Con Cross Validation obtuvimos un 0.7676527% de precision mientras que con OOB obtuvimos 0.7719%.
 
 ## XGBOOST
+  * XGBoost es la abreviatura de 'Extreme Gradient Boosting'. Esta basado en en el modelo original GBM (ya estudiado anteriormente).
+
+  * A continuacion se muestran algunas de las ventajas de XGBOOST frente GBM:
+    +Regularizacion: La implementacion de GBM no tiene regularizacion, lo que provoca que XGBOOST reduzca el sobreajuste.
+    + Procesammiento paralelo: XGBoost implementa el procesamiento paralelo y es sorprendentemente más rápido en comparación con GBM.
+    + Mayor flexibilidad: XGBoost permite a los usuarios definir objetivos de optimización personalizados y criterios de evaluación.
+    + Manejo de valores perdidos: XGBoost tiene una rutina incorporada para manejar los valores perdidos.
+    + Poda: El algoritmo GBM dejaría de dividir un nodo cuando encuentre una pérdida negativa en una división. Por lo tanto XGBoost es mas codicioso. XGBoost por otro lado hace divisiones hasta la **max_depth** especificada y luego comienza a podar el árbol hacia atrás y a eliminar divisiones de las cuales no hay ganancia positiva.
+    + Incorpora Cross-Validation: XGBoost permite al usuario ejecutar una validación cruzada en cada iteración del proceso de "boosting" y, por lo tanto, es fácil obtener el número óptimo  de iteraciones de "boosting" en una sola ejecución. Con GBM tenemos que ejecutar una búsqueda en cuadrícula y solo se pueden probar valores limitados.
+
 ```{r , echo=FALSE}
 
 ControlParamteres <- trainControl(method = "cv",
@@ -377,15 +394,17 @@ ControlParamteres <- trainControl(method = "cv",
 * Ahora predecimos
 ```{r , echo=FALSE}
 predictions<-predict(modelxgboost,test)
-out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
-levels(out_predGBOOST)=c("F","V")
-confusionMatrixGBOOST<-confusionMatrix(data = out_predGBOOST, reference = test$outcome,positive="F")
+#out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
+#levels(out_predGBOOST)=c("F","V")
+confusionMatrixGBOOST<-confusionMatrix(data = predictions, reference = test$outcome,positive="F")
 confusionMatrixGBOOST
 ```
 ```{r , echo=FALSE}
 fourfoldplot(confusionMatrixGBOOST$table)
 ```
+
 ## Redes de neuronas
+
 * Las redes neuronales son sistemas computacionales de aprendizaje basados en el funcionamiento de las redes neuronales biologicas presentes en el cerebro de los animales.
 
 * Estas redes estan construidas a partir de una serie de nodos llamados "neuronas" que se organizan en forma de capas. Existe una capa de entrada, una capa de salida y al menos una capa intermedia o capa "oculta".
@@ -396,9 +415,30 @@ fourfoldplot(confusionMatrixGBOOST$table)
 
 * Las tareas de estas neuronas es realizar una suma ponderada de todas las entradas que tiene y aplicarle una funcion de activacion para posteriormente pasar el valor a las neuronas de la sigueinte capa, que a su vez repetiran el proceso.
 
+* En primer lugar, antes de comenzar con la construccion del modelo de redes neuronales, es necesario normalizar los datos. 
+
+```{r , echo=FALSE}
+#Max-Min Normalization
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+trainNorm<-train
+testNorm<-test
+
+trainNorm$outcome<-as.numeric(trainNorm$outcome)
+testNorm$outcome<-as.numeric(testNorm$outcome)
+
+trainNorm <- as.data.frame(lapply(trainNorm, normalize))
+testNorm <- as.data.frame(lapply(testNorm, normalize))
+
+trainNorm$outcome<-train$outcome
+testNorm$outcome<-test$outcome
+```
+
+
 ```{r , echo=FALSE}
 set.seed(42)
-model.nn = nnet(outcome ~ ., data = train, size = 2, rang = 0.1, maxit = 200)
+model.nn = nnet(outcome ~ ., data = trainNorm, size = 2, rang = 0.1, maxit = 200)
 print(model.nn)
 ```
 
@@ -407,13 +447,14 @@ plotnet(model.nn, alpha=0.6)
 ```
 
 ```{r , echo=FALSE}
-model.predictNET = predict(model.nn, test)
+model.predictNET = predict(model.nn, testNorm)
 
-#model.predict<-as.factor(model.predict)
+#Si usamos factores
 out_pred_numNET<-as.factor(ifelse(model.predictNET > 0.5, 1, 0))
 levels(out_pred_numNET)=c("F","V")
 
-confusionMatrixNET<-confusionMatrix(data=out_pred_numNET,reference=test$outcome,positive="F")
+
+confusionMatrixNET<-confusionMatrix(data=out_pred_numNET,reference=testNorm$outcome,positive="F")
 confusionMatrixNET
 ```
 
