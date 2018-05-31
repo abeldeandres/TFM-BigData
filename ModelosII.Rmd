@@ -87,76 +87,15 @@ test <- final[!ind,]
 
 ## REGRESION LOGISTICA 
 ### Usando todos los predictores
+#### Usando Cross Validation 10-fold
 * En primer lugar vamos a construir nuestro modelo de regresion logistica con los datos de entrenamiento.
 ```{r , echo=FALSE}
 set.seed(42)
-modelo.logit <- glm(outcome ~ ., 
-                    data = train, family = "binomial")
-summary(modelo.logit)
-```
-
-* Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
-```{r , echo=FALSE}
-options(warn=-1) 
-pred <- predict(modelo.logit, newdata = test, type = "response")  # predicted probabilities
-options(warn=1) 
-
-out_pred_num <- ifelse(pred > 0.5, 1, 0)
-#out_pred <- factor(out_pred_num, levels=c(0, 1))
-out_pred<-as.factor(out_pred_num)
-levels(out_pred)=c("F","V")
-confusionMatrix<-confusionMatrix(data = out_pred, reference = test$outcome,positive="F")
-confusionMatrix
-
-```
-
-```{r , echo=FALSE}
-fourfoldplot(confusionMatrix$table)
-```
-
-* Como podemos comprobar, el modelo se ajusta bastante bien, con un 76%. Dicho de otra forma, el modelo es capaz de predecir correctamente un 76% de los datos de los pacientes.
-
-* A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
-```{r , echo=FALSE}
-plot.roc(test$outcome, pred,          # data
-         percent = TRUE,                    # show all values in percent
-         partial.auc=c(100, 90), 
-         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
-         print.auc=TRUE,                    
-         #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
-         print.auc.col = "#1c61b6",
-         auc.polygon = TRUE, 
-         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
-         max.auc.polygon = TRUE, 
-         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
-         main = "Partial AUC (pAUC)")
-
-plot.roc(test$outcome, pred,
-         percent = TRUE, 
-         add = TRUE, 
-         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
-         partial.auc = c(100, 90), 
-         partial.auc.correct = TRUE,
-         partial.auc.focus = "se",          # focus pAUC on the sensitivity
-         print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
-         print.auc.col = "#008600",
-         print.auc.y = 40,                  # do not print auc over the previous one
-         auc.polygon = TRUE, 
-         auc.polygon.col = "#008600",
-         max.auc.polygon = TRUE, 
-         max.auc.polygon.col = "#00860022")
-```
-
-
-#### Usando Cross Validation 10-fold
-
-```{r , echo=FALSE}
 ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
 mod_fit <- train(outcome ~ .,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
+summary(mod_fit)
 ```
 
 * Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
@@ -168,8 +107,11 @@ confusionMatrixCV
 ```
 
 ```{r , echo=FALSE}
-fourfoldplot(confusionMatrix$table)
+fourfoldplot(confusionMatrixCV$table)
 ```
+
+* Como podemos comprobar, el modelo se ajusta bastante bien, con un 76%. Dicho de otra forma, el modelo es capaz de predecir correctamente un 76% de los datos de los pacientes.
+
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 
 ```{r , echo=FALSE}
@@ -209,38 +151,33 @@ plot.roc(test$outcome, predCV$F,
 
 ### Eliminando los predictores "sex" y "cause""
 * Al igual que hicimos en el modelo anterior, vamos a construir el modelo eliminando las variables de "sex" y "cause"
+
 ```{r , echo=FALSE}
 set.seed(42)
-modelo.logit2 <- glm(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt, 
-                    data = train, family = "binomial")
-summary(modelo.logit2)
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE,classProbs=TRUE,
+summaryFunction=twoClassSummary)
+mod_fit1 <- train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="glm", family="binomial",trControl = ctrl, tuneLength = 5,metric="ROC")
 ```
 
 * Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
 ```{r , echo=FALSE}
-options(warn=-1) 
-pred2 <- predict(modelo.logit2, newdata = test, type = "response")  # predicted probabilities
-options(warn=1) 
-
-out_pred_num2 <- ifelse(pred2 > 0.5, 1, 0)
-#out_pred2 <- factor(out_pred_num2, levels=c(0, 1))
-out_pred2<-as.factor(out_pred_num2)
-levels(out_pred2)=c("F","V")
-
-confusionMatrix2<-confusionMatrix(data = out_pred2, reference = test$outcome,positive="F")
-confusionMatrix2
+predCV1 = predict(mod_fit1, newdata=test)
+confusionMatrixCV1<-confusionMatrix(data = predCV1, reference = test$outcome,positive="F")
+confusionMatrixCV1
 
 ```
 
 ```{r , echo=FALSE}
-fourfoldplot(confusionMatrix2$table)
+fourfoldplot(confusionMatrixCV1$table)
 ```
 
 * Como podemos comprobar, aunque el AIC ha mejorado (reducido su valor) utilizando este modelo (sin las variables de sexo y causa) respecto al modelo con todas las variables, ha empeorado las prediciones.
 
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 ```{r , echo=FALSE}
-plot.roc(test$outcome, pred2,          # data
+predCV1 = predict(mod_fit1, newdata=test,type="prob")
+
+plot.roc(test$outcome, predCV1$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -254,7 +191,7 @@ plot.roc(test$outcome, pred2,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, pred2,
+plot.roc(test$outcome, predCV1$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -296,10 +233,8 @@ print(model.RF)
 ```
 
 ```{r , echo=FALSE}
-train.RF<-train
-train.RF$outcome<-as.numeric(train.RF$outcome)
-mtry=tuneRF(x = train.RF,       # data set de entrenamiento 
-       y = train.RF$outcome,  # variable a predecir
+mtry=tuneRF(x = train[,-14],       # data set de entrenamiento 
+       y = train$outcome,  # variable a predecir
        mtryStart  = 1,   # cantidad de variables inicial 
        stepFactor = 2,   # incremento de variables
        ntreeTry   = 500, # cantidad arboles a ejecutar en cada iteracion
