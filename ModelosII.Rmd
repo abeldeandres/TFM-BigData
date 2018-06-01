@@ -20,7 +20,7 @@ library(gbm)
 library(rfUtilities)
 library(NeuralNetTools)
 library(e1071)
-library(adabag) #adaboost
+library(ada) #adaboost
 library(corrplot)
 library(pROC)
 library(ROCR) 
@@ -307,16 +307,42 @@ plot.roc(test$outcome, predRF[,1],
 
 * Las caracteristicas que lo convierten en un buen metodo son: su capacidad de evadir el **overfitting** y su menor porcentaje de error a cambio de tener un error mayor durante el entrenamiento.
 
+* En primer lugar vamos a utilizar el paquete de "caret" con el objetivo de encontrar el modelo optimo usando adaboost. Aplicaremos la validación cruzada, iterando 10 veces.
+
 ```{r , echo=FALSE}
 set.seed(42)
-adaboost<-boosting(outcome ~ ., data=train, boos=TRUE, mfinal=20,coeflearn='Breiman')
-#summary(adaboost)
+trainControl <- trainControl(method="cv", number=10)
+metric <- "Accuracy"
+model.ada1 <- train(outcome~., data=train, method="ada", 
+                  trControl=trainControl,metric=metric)
+print(model.ada1)
+
 ```
+```{r , echo=FALSE}
+plot(model.ada1)
+```
+
+* Como se puede comprobar en el grafico anterior, con 3 iteraciones, conseguimos una mayor precision (0.767).
+* Tambien podemos comprobar como el paquete caret nos indica cuales son los mejores parametros que debemos utilizar para obtener la mejor precision.
+
+* Con estos parametros (numero de iteraciones, maxima profundidad y nu -parametro para truncar-) construimos nuestro modelo:
+
+```{r , echo=FALSE}
+set.seed(42)
+model.ada<-ada(outcome~.,data=train,iter=150,nu=0.1,control=rpart.control(maxdepth=2))
+
+print(model.ada)
+```
+
+```{r , echo=FALSE}
+plot(model.ada)
+```
+
 * Despues de construir el modelo con los datos de entrenamiento y habiendo entrenado el modelo construido con los datos de prueba, obtenemos la matriz de confusion:
 
 ```{r , echo=FALSE}
-adaboost.predict=predict(adaboost,test)
-confusionMatrixAdaBoost<-confusionMatrix(data=as.factor(adaboost.predict$class),reference=test$outcome,positive="F")
+adaboost.predict=predict(model.ada,test)
+confusionMatrixAdaBoost<-confusionMatrix(data=model.ada$confusion,reference=test$outcome,positive="F")
 confusionMatrixAdaBoost
 ```
 
@@ -327,9 +353,9 @@ fourfoldplot(confusionMatrixAdaBoost$table)
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 
 ```{r , echo=FALSE}
-adaboost.predict <- predict(adaboost, newdata = test, type="prob")
+adaboost.predict <- predict(model.ada, newdata = test, type="prob")
 
-plot.roc(test$outcome, predRF[,1],          # data
+plot.roc(test$outcome, adaboost.predict[,1],          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -343,7 +369,7 @@ plot.roc(test$outcome, predRF[,1],          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, predRF[,1],
+plot.roc(test$outcome, adaboost.predict[,1],
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -388,73 +414,37 @@ plot.roc(test$outcome, predRF[,1],
 
 ```{r , echo=FALSE}
 #https://rpubs.com/omicsdata/gbm
-trainGBM<-train
-trainGBM$outcome<-as.numeric(trainGBM$outcome)
-trainGBM = transform(trainGBM, outcome=outcome-1)
 set.seed(42)
-model.gbm = gbm(outcome ~ ., data = trainGBM, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=3000, verbose=F)
-model.gbm
+fitControl = trainControl(method="cv", number=10)
+metric <- "Accuracy"
+
+modelGBM = train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F )
+
+print(modelGBM)
 ```
 
-* A continuacion mostramos un grafico con la mejor iteracion para evitar el conocido sobreajuste (**overfitting**)
-
-* Utilizando OOB
-
 ```{r , echo=FALSE}
-
-best.iter.oob <- gbm.perf(model.gbm,method="OOB")  # returns out-of-bag estimated best number of trees
-print(best.iter.oob)
-
+plot(modelGBM)
 ```
 
-* Utilizando Cross validation
+* Después de construir el modelo, vamos a predecir utilizando los datos de test, con el objetivo de obtener la precision de este.
 
 ```{r , echo=FALSE}
+model.predictGBM = predict(modelGBM, test, na.action = na.pass)
 
-best.iter.cv <- gbm.perf(model.gbm,method="cv")   # returns 5-fold cv estimate of best number of trees
-print(best.iter.cv)
-
-
-```
-
-* Hemos utilizado OOB ya que el numero de iteraciones es menor.
-
-* Teniendo en cuenta el numero optimo de iteraciones, volvemos a crear el modelo con este numero:
-```{r , echo=FALSE}
-set.seed(42)
-model.gbm = gbm(outcome ~ ., data = trainGBM, shrinkage=0.01, distribution = 'bernoulli', cv.folds=5, n.trees=best.iter.oob, verbose=F)
-model.gbm
-```
-
-* El modelo tambien nos indica la importancia de los predictores:
-
-```{r , echo=FALSE}
-summary(model.gbm)
-```
-
-* Una vez mas, podemos comprobar que las variables "age" esta en la cabeza de las variables mas influyentes en el modelo y por el contrario la variable "sex", la que menos.
-
-
-```{r , echo=FALSE}
-model.predictGBM = predict(model.gbm, test, type="response")
-out_pred_numGBM <- ifelse(model.predictGBM > 0.5, 1, 0)
-#out_predGBM <- factor(out_pred_numGBM, levels=c(0, 1))
-out_predGBM<-as.factor(out_pred_numGBM)
-levels(out_predGBM)=c("F","V")
-confusionMatrixGBM<-confusionMatrix(data = out_predGBM, reference = test$outcome,positive="F")
+confusionMatrixGBM<-confusionMatrix(data=model.predictGBM,reference=test$outcome,positive="F")
 confusionMatrixGBM
 ```
 ```{r , echo=FALSE}
 fourfoldplot(confusionMatrixGBM$table)
 ```
 
-* Como conclusiones, utilizando OOB, hemos obtenido una mejor precision. Con Cross Validation obtuvimos un 0.7676527% de precision mientras que con OOB obtuvimos 0.7719%.
 
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 
 ```{r , echo=FALSE}
-
-plot.roc(test$outcome,model.predictGBM,          # data
+model.predictGBM = predict(modelGBM, test, type="prob")
+plot.roc(test$outcome,model.predictGBM$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -468,7 +458,7 @@ plot.roc(test$outcome,model.predictGBM,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, model.predictGBM,
+plot.roc(test$outcome, model.predictGBM$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -499,7 +489,7 @@ plot.roc(test$outcome, model.predictGBM,
 ```{r , echo=FALSE}
 
 ControlParamteres <- trainControl(method = "cv",
-                                  number = 5, #usamos 5 fold cross-validation
+                                  number = 10, #usamos 5 fold cross-validation
                                   savePredictions = TRUE,
                                   classProbs = TRUE #give the probabilities for each class.Not just the class labels
 )

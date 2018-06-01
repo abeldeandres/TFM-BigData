@@ -1,0 +1,705 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={TFM},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+  \title{TFM}
+  \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+  \author{}
+  \preauthor{}\postauthor{}
+  \date{}
+  \predate{}\postdate{}
+
+
+\begin{document}
+\maketitle
+
+\subsection{PREPARACION}\label{preparacion}
+
+\subsubsection{FASE I: ClasificaciÃ³n entre: ALIVE, DEATH, NO-DATA y
+MD/GR}\label{fase-i-clasificacian-entre-alive-death-no-data-y-mdgr}
+
+\begin{itemize}
+\item
+  \textbf{En esta fase, se ha realizado una clasificacion de los datos
+  dados segÃºn 4 resultados finales:}
+\item
+  Fallecidos o con discapacidades severas (SD-D)
+\item
+  Con discapacidad moderada o buena recuperacion (MR-GR)
+\item
+  Vivos (pero sin resultados finales)
+\item
+  Sin datos
+\item
+  \textbf{Para este procesado se han tenido en cuenta principalmente las
+  siguientes variables:}
+\item
+  EO\_Outcome
+\item
+  EO\_Symptoms
+\item
+  TH\_Outcome
+\item
+  TH\_Symptoms
+\item
+  GOS5
+\item
+  GOS8
+\end{itemize}
+
+\paragraph{\texorpdfstring{Cuando las variables de GOS5 y GOS8
+\textbf{tienen}
+datos}{Cuando las variables de GOS5 y GOS8 tienen datos}}\label{cuando-las-variables-de-gos5-y-gos8-tienen-datos}
+
+\begin{itemize}
+\tightlist
+\item
+  Si las filas ya contenian datos en las columnas de GOS5 y GOS8,
+  directamente se han clasificado -segun estas variables-. De lo
+  contrario, se ha tenido que analizar las otras variables.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{head}\NormalTok{(datos.modelo[,}\KeywordTok{c}\NormalTok{(}\DecValTok{17}\NormalTok{,}\DecValTok{18}\NormalTok{,}\DecValTok{27}\NormalTok{,}\DecValTok{28}\NormalTok{,}\DecValTok{29}\NormalTok{,}\DecValTok{30}\NormalTok{)])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8
+## 1          4           1         NA          NA <NA> <NA>
+## 2          4           3         NA          NA <NA>  MD+
+## 3          4           2         NA          NA  SD* <NA>
+## 4          4           2         NA          NA <NA>  GR+
+## 5          4           1         NA          NA <NA> <NA>
+## 6          4           2         NA          NA <NA>  SD-
+\end{verbatim}
+
+\paragraph{\texorpdfstring{Cuando las variables de GOS5 y GOS8
+\textbf{no tienen}
+datos}{Cuando las variables de GOS5 y GOS8 no tienen datos}}\label{cuando-las-variables-de-gos5-y-gos8-no-tienen-datos}
+
+\begin{itemize}
+\tightlist
+\item
+  Si las variables de Outcome contenian el valor de 1 (fallecimiento) o
+  las variables de Symptoms contenian el valor de 6, directamente esas
+  filas del dataset pasaban a clasificarse como fallecidos.
+\end{itemize}
+
+\begin{verbatim}
+##    EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8 TH_Cause
+## 22          1           6         NA          NA <NA> <NA>       NA
+## 38          1           6         NA          NA <NA> <NA>       NA
+## 50          1           6         NA          NA <NA> <NA>       NA
+## 55          1           6         NA          NA <NA> <NA>       NA
+## 61          1           6         NA          NA <NA> <NA>       NA
+## 85          1           6         NA          NA <NA> <NA>       NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Si las variables de Outcome contenian el valor de 4 (alta) y las de
+  Symptoms el valor de 1, entonces se han clasificado como ``Vivos (pero
+  sin resultados finales)''.
+\end{itemize}
+
+\begin{verbatim}
+##    EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8 TH_Cause
+## 1           4           1         NA          NA <NA> <NA>       NA
+## 5           4           1         NA          NA <NA> <NA>       NA
+## 18          4           1         NA          NA <NA> <NA>       NA
+## 20          4           1         NA          NA <NA> <NA>       NA
+## 36          4           1         NA          NA <NA> <NA>       NA
+## 51          4           1         NA          NA <NA> <NA>       NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Se clasificaran como ``Sin datos'' todas aquellas filas que no
+  contengan valores ni en las columnas de Symptomps. Se tienen en cuenta
+  los transferidos a otros hospitales.
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8 TH_Cause
+## 384          NA          NA         NA          NA <NA> <NA>       NA
+## 417          NA          NA         NA          NA <NA> <NA>       NA
+## 985          NA          NA         NA          NA <NA> <NA>       NA
+## 997          NA          NA         NA          NA <NA> <NA>       NA
+## 2270         NA          NA         NA          NA <NA> <NA>       NA
+## 2292         NA          NA         NA          NA <NA> <NA>       NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Si los Symptoms son de 4 o de 5 (Discapacidad Severa), entonces se
+  clasificaran como ``Fallecidos o con discapacidades severas''
+\end{itemize}
+
+\begin{verbatim}
+##     EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8 TH_Cause
+## 160          5           5         NA          NA <NA> <NA>       NA
+## 241          5           5         NA          NA <NA> <NA>       NA
+## 317          5           5         NA          NA <NA> <NA>       NA
+## 336          5           5         NA          NA <NA> <NA>       NA
+## 357          5           5         NA          NA <NA> <NA>       NA
+## 573          5           5         NA          NA <NA> <NA>       NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Asi mismo, si las variables de Outcome contenian el valor de 4 y las
+  de Symptoms el valor de 9, significa que el paciente ha sido dado de
+  alta, pero no se tiene ningun dato sobre el estado final, por lo
+  tanto, se han incluido en la clasificacion de ``Vivos (pero sin
+  resultados finales)''.
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8 TH_Cause
+## 409           4           9         NA          NA <NA> <NA>       NA
+## 1000          4           9         NA          NA <NA> <NA>       NA
+## 4859          4           9         NA          NA <NA> <NA>       NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Se han visto 3 elementos de NODATA, cuyos pacientes obtienen un estado
+  de symptoma 4, por lo que se envia a estado de fallecido, son datos
+  anomalos.
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Outcome EO_Symptoms TH_Outcome TH_Symptoms GOS5 GOS8 TH_Cause
+## 52            2           4         NA           4 <NA> <NA>        3
+## 699           2           4         NA           4 <NA> <NA>       NA
+## 3025          2           4         NA           4 <NA> <NA>        1
+\end{verbatim}
+
+\paragraph{DATOS FINALES:}\label{datos-finales}
+
+\begin{itemize}
+\tightlist
+\item
+  Fallecidos o con discapacidades severas
+\end{itemize}
+
+\begin{verbatim}
+## [1] 3559
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Con discapacidad moderada o buena recuperacion
+\end{itemize}
+
+\begin{verbatim}
+## [1] 5997
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Vivos (pero sin resultados finales)
+\end{itemize}
+
+\begin{verbatim}
+## [1] 127
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Sin datos
+\end{itemize}
+
+\begin{verbatim}
+## [1] 86
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Con NA
+\end{itemize}
+
+\begin{verbatim}
+## [1] 239
+\end{verbatim}
+
+\subsubsection{FASE II: ClasificaciÃ³n entre: ESCANEADOS y NO
+ESCANEADOS}\label{fase-ii-clasificacian-entre-escaneados-y-no-escaneados}
+
+\begin{itemize}
+\tightlist
+\item
+  En primer lugar, se han encontrado ciertos datos anomalos, en los que
+  aparecen datos escaneados (1) y no tienen los datos del escaner,
+  entonces deberiamos ponerlo como no escaneado (2).
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Head.CT.scan EO_1.or.more.PH EO_Subarachnoid.bleed
+## 201                1              NA                    NA
+## 314                1              NA                    NA
+## 1277               1              NA                    NA
+## 3234               1              NA                    NA
+## 3687               1              NA                    NA
+## 4256               1              NA                    NA
+##      EO_Obliteration.3rdVorBC EO_Midline.shift..5mm EO_Non.evac.haem
+## 201                        NA                    NA               NA
+## 314                        NA                    NA               NA
+## 1277                       NA                    NA               NA
+## 3234                       NA                    NA               NA
+## 3687                       NA                    NA               NA
+## 4256                       NA                    NA               NA
+##      EO_Evac.haem
+## 201            NA
+## 314            NA
+## 1277           NA
+## 3234           NA
+## 3687           NA
+## 4256           NA
+\end{verbatim}
+
+\begin{itemize}
+\item
+  A continuaciÃ³n se van a clasificar los datos como:
+\item
+  Escaneados
+\end{itemize}
+
+\begin{verbatim}
+##    EO_Head.CT.scan EO_1.or.more.PH TH_Head.CT.scan TH_1.or.more.PH outcome
+## 2                1               2            <NA>              NA    MDGR
+## 7                1               2            <NA>              NA    MDGR
+## 8                1               1            <NA>              NA    MDGR
+## 14               1               2               1               2       D
+## 17               1               1            <NA>              NA    MDGR
+## 22               1               2            <NA>              NA       D
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  No escaneados
+\end{itemize}
+
+\begin{verbatim}
+##    EO_Head.CT.scan EO_1.or.more.PH TH_Head.CT.scan TH_1.or.more.PH outcome
+## 3                2              NA            <NA>              NA       D
+## 4                2              NA            <NA>              NA    MDGR
+## 6                2              NA            <NA>              NA       D
+## 9                2              NA            <NA>              NA    MDGR
+## 10               2              NA            <NA>              NA    MDGR
+## 11               2              NA            <NA>              NA    MDGR
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  En analisis
+\end{itemize}
+
+\begin{verbatim}
+##     EO_Head.CT.scan EO_1.or.more.PH TH_Head.CT.scan TH_1.or.more.PH
+## 192            <NA>              NA            <NA>              NA
+## 227            <NA>              NA            <NA>              NA
+## 240            <NA>              NA            <NA>              NA
+## 267            <NA>              NA               1               2
+## 329            <NA>              NA               1               2
+## 354            <NA>              NA               1               1
+##     outcome
+## 192       D
+## 227       D
+## 240       D
+## 267       D
+## 329       D
+## 354       D
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Si el Outcome es 2 (el paciente se ha transferido a otro hospital), se
+  ha escaneado en dicho hospital (TH\_SCAN) y no se tiene ninguna
+  informaciÃ³n en los escÃ¡neres, se clasificaran como ``En anÃ¡lisis''.
+\end{itemize}
+
+\begin{verbatim}
+##     EO_Outcome TH_Head.CT.scan TH_1.or.more.PH TH_Subarachnoid.bleed
+## 52           2            <NA>              NA                    NA
+## 128          2            <NA>              NA                    NA
+## 135          2            <NA>              NA                    NA
+## 188          2            <NA>              NA                    NA
+## 193          2            <NA>              NA                    NA
+## 207          2            <NA>              NA                    NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Sobre el dataset NOSCANEADO: Si el Outcome es 2 (el paciente se ha
+  transferido a otro hospital) y no se ha realizado ningun escaner pero
+  si contiene datos en el escaner, entonces se clasificara como
+  ``Escaneado''.
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Outcome TH_Head.CT.scan TH_1.or.more.PH TH_Subarachnoid.bleed
+## 201           2               1               2                     2
+## 217           2               1               2                     1
+## 257           2               1               1                     2
+## 314           2               1               1                     2
+## 318           2               1               2                     2
+## 1184          2               1               2                     2
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Sobre el dataset NOSCANEADO: Nos hemos dado cuenta que existen datos
+  anomalos, que contienen varios escaneres, pero sin embargo, no se
+  indica como escaneado, son los registros: 2628,3276,3279,8469,8655,
+  etc. (En total son 12)
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Head.CT.scan EO_1.or.more.PH EO_Subarachnoid.bleed
+## 2628               2               2                     2
+## 3276               2               2                     2
+## 3279               2               2                     2
+## 3720               2               2                     2
+## 7286               2               2                     2
+## 8469               2               2                     2
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Sobre el dataset ENANALISIS: Nos hemos dado cuenta de que existen
+  datos anomalos. Para las variables de los pacientes que se han
+  transferido a otro hospital (TH), existen variables de escaner
+  (TH\_Head.CT.scan) que se encuentran vacias, junto con el resto de
+  variables del escaner en particular. Por lo tanto, se ha asignado el
+  valor de 2 a la variable de escaner (TH\_Head.CT.scan) y se han
+  incluido en los escaneados, puesto que en todos ellos, en la variable
+  EO\_Head.CT.scan si que existe un valor de 1 (escaneados) y no se han
+  encontrado mas anomalias en dichos datos.
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Head.CT.scan EO_1.or.more.PH EO_Outcome TH_Head.CT.scan
+## 681                1               2          2            <NA>
+## 1639               1               2          2            <NA>
+## 5743               1               2          2            <NA>
+## 8434               1               2          2            <NA>
+## 8972               1               2          2            <NA>
+##      TH_1.or.more.PH TH_Subarachnoid.bleed
+## 681               NA                    NA
+## 1639              NA                    NA
+## 5743              NA                    NA
+## 8434              NA                    NA
+## 8972              NA                    NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Sobre el dataset SCANEADO: Se van a eliminar todas las filas que no
+  tengan informacion en el TH\_Major.EC.injury y en el
+  EO\_Major.EC.injury
+\end{itemize}
+
+\begin{verbatim}
+##     EO_Outcome TH_Major.EC.injury
+## 76           2                 NA
+## 90           2                 NA
+## 315          2                 NA
+## 361          2                 NA
+## 510          2                 NA
+## 565          2                 NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Sobre el dataset SCANEADO: Comprobamos que las variables: EO\_Cause y
+  EO\_Symptoms, no contengan valores nulos.
+\end{itemize}
+
+\begin{verbatim}
+##     EO_Cause EO_Major.EC.injury
+## 177        3                  2
+## 211       NA                  1
+## 242       NA                  2
+## 255        2                  2
+## 293       NA                  2
+## 321       NA                  1
+\end{verbatim}
+
+\paragraph{DATOS FINALES:}\label{datos-finales-1}
+
+\begin{itemize}
+\tightlist
+\item
+  Vivos y escaneados
+\end{itemize}
+
+\begin{verbatim}
+## [1] 4158
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Vivos y no escaneados
+\end{itemize}
+
+\begin{verbatim}
+## [1] 1535
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Vivos en análisis
+\end{itemize}
+
+\begin{verbatim}
+## [1] 304
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Fallecidos y escaneados
+\end{itemize}
+
+\begin{verbatim}
+## [1] 2830
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Fallecidos y no escaneados
+\end{itemize}
+
+\begin{verbatim}
+## [1] 439
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Fallecidos en análisis
+\end{itemize}
+
+\begin{verbatim}
+## [1] 290
+\end{verbatim}
+
+\subsubsection{FASE III: Eliminacion y centralizacion de
+variables}\label{fase-iii-eliminacion-y-centralizacion-de-variables}
+
+\begin{itemize}
+\tightlist
+\item
+  Se va a centralizar las variables de PUPIL\_REACT\_LEFT y
+  PUPIL\_REACT\_RIGHT
+\end{itemize}
+
+\begin{verbatim}
+##   PUPIL_REACT_LEFT PUPIL_REACT_RIGHT ESTADOESCANER
+## 1                1                 1      SCANEADO
+## 2                1                 1      SCANEADO
+## 3                1                 1      SCANEADO
+## 4                1                 1      SCANEADO
+## 5                1                 1      SCANEADO
+## 6                1                 1      SCANEADO
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Both reactive
+\end{itemize}
+
+\begin{verbatim}
+## [1] 5664
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  No response unilateral
+\end{itemize}
+
+\begin{verbatim}
+## [1] 497
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  No response
+\end{itemize}
+
+\begin{verbatim}
+## [1] 634
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Unable to assess
+\end{itemize}
+
+\begin{verbatim}
+## [1] 193
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Ahora vamos a ver si podemos prescindir o aunar las variables de
+  EO\_Cause y TH\_Cause. Para ello veremos en que caso, ambas variables
+  difieren:
+\end{itemize}
+
+\begin{verbatim}
+##      EO_Cause TH_Cause
+## 2308        1        3
+## 2814        3        1
+## 3286        2        3
+## 4022        3        1
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Como se puede observar, podriamos prescindir de la variable TH\_Cause,
+  puesto que recoge la misma información que EO\_Cause.
+\end{itemize}
+
+
+\end{document}

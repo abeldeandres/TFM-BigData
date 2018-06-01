@@ -1,0 +1,27 @@
+http://eio.usc.es/pub/mte/descargas/ProyectosFinMaster/Proyecto_1469.pdf 07/05/2018
+https://cran.r-project.org/web/packages/rpart/vignettes/longintro.pdf 07/05/2018
+http://www.milbo.org/rpart-plot/prp.pdf 07/05/2018
+http://www.sthda.com/english/wiki/print.php?id=206 08/05/2018
+
+https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/ 15/05/2018 normalizacion en pca
+http://apuntes-r.blogspot.com.es/2015/06/cantidad-de-arboles-en-random-forest.html 16/05/2018 seleccion de variables en random forest
+http://rischanlab.github.io/RandomForest.html 16/05/2018
+http://www.uam.es/personal_pdi/ciencias/jspinill/CFCUAM2014/RF_BRT-CFCUAM2014.html 17/05/2018
+http://games.cmm.uchile.cl/media/uploads/posts/RF_presentation.pdf 17/05/2018
+http://rischanlab.github.io/RandomForest.html 17/05/2018
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4842399/ 19/05/2018
+
+
+Dudas: No me aparecen todas las variables en el arbol de clasificacion. 
+
+https://rpro.wikispaces.com/Comparativa+de+modelos+de+clasificación#Ejemplo%20sin%20parámetros 
+https://brennonborbon.wordpress.com/2018/01/16/random-forest-gradient-boosting-logistic-regression-and-decision-trees-how-to-do-it-in-r-for-beginners/
+http://rstudio-pubs-static.s3.amazonaws.com/74431_8cbd662559f6451f9cd411545f28107f.html
+https://stats.idre.ucla.edu/r/dae/logit-regression/
+
+
+
+Terminos comunes en modelos:
+confusionMatrix
+AUC
+ANOVA
