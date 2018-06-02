@@ -102,12 +102,12 @@ summary(mod_fit)
 
 ```{r , echo=FALSE}
 predCV = predict(mod_fit, newdata=test)
-confusionMatrixCV<-confusionMatrix(data = predCV, reference = test$outcome,positive="F")
-confusionMatrixCV
+confusionMatrixLOG<-confusionMatrix(data = predCV, reference = test$outcome,positive="F")
+confusionMatrixLOG
 ```
 
 ```{r , echo=FALSE}
-fourfoldplot(confusionMatrixCV$table)
+fourfoldplot(confusionMatrixLOG$table)
 ```
 
 * Como podemos comprobar, el modelo se ajusta bastante bien, con un 76%. Dicho de otra forma, el modelo es capaz de predecir correctamente un 76% de los datos de los pacientes.
@@ -162,13 +162,13 @@ mod_fit1 <- train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt
 * Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
 ```{r , echo=FALSE}
 predCV1 = predict(mod_fit1, newdata=test)
-confusionMatrixCV1<-confusionMatrix(data = predCV1, reference = test$outcome,positive="F")
-confusionMatrixCV1
+confusionMatrixLOG2<-confusionMatrix(data = predCV1, reference = test$outcome,positive="F")
+confusionMatrixLOG2
 
 ```
 
 ```{r , echo=FALSE}
-fourfoldplot(confusionMatrixCV1$table)
+fourfoldplot(confusionMatrixLOG2$table)
 ```
 
 * Como podemos comprobar, aunque el AIC ha mejorado (reducido su valor) utilizando este modelo (sin las variables de sexo y causa) respecto al modelo con todas las variables, ha empeorado las prediciones.
@@ -267,9 +267,10 @@ fourfoldplot(confusionMatrixRF$table)
 
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 ```{r , echo=FALSE}
-predRF <- predict(model.RF2, newdata = test, type="prob")
+pred.RF <- predict(model.RF2, newdata = test, type="prob")
+pred.RF<- data.frame(pred.RF)
 
-plot.roc(test$outcome, predRF[,1],          # data
+plot.roc(test$outcome, pred.RF$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -283,7 +284,7 @@ plot.roc(test$outcome, predRF[,1],          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, predRF[,1],
+plot.roc(test$outcome, pred.RF$V,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -341,8 +342,8 @@ plot(model.ada)
 * Despues de construir el modelo con los datos de entrenamiento y habiendo entrenado el modelo construido con los datos de prueba, obtenemos la matriz de confusion:
 
 ```{r , echo=FALSE}
-adaboost.predict=predict(model.ada,test)
-confusionMatrixAdaBoost<-confusionMatrix(data=model.ada$confusion,reference=test$outcome,positive="F")
+pred.ada=predict(model.ada,test)
+confusionMatrixAdaBoost<-confusionMatrix(data=pred.ada,reference=test$outcome,positive="F")
 confusionMatrixAdaBoost
 ```
 
@@ -353,9 +354,10 @@ fourfoldplot(confusionMatrixAdaBoost$table)
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 
 ```{r , echo=FALSE}
-adaboost.predict <- predict(model.ada, newdata = test, type="prob")
-
-plot.roc(test$outcome, adaboost.predict[,1],          # data
+pred.ada <- predict(model.ada, newdata = test, type="prob")
+pred.ada<-data.frame(pred.ada)
+colnames(pred.ada) <- c("F", "V")
+plot.roc(test$outcome, pred.ada$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -369,7 +371,7 @@ plot.roc(test$outcome, adaboost.predict[,1],          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, adaboost.predict[,1],
+plot.roc(test$outcome, pred.ada$V,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -430,9 +432,9 @@ plot(modelGBM)
 * Después de construir el modelo, vamos a predecir utilizando los datos de test, con el objetivo de obtener la precision de este.
 
 ```{r , echo=FALSE}
-model.predictGBM = predict(modelGBM, test, na.action = na.pass)
+pred.GBM = predict(modelGBM, test, na.action = na.pass)
 
-confusionMatrixGBM<-confusionMatrix(data=model.predictGBM,reference=test$outcome,positive="F")
+confusionMatrixGBM<-confusionMatrix(data=pred.GBM,reference=test$outcome,positive="F")
 confusionMatrixGBM
 ```
 ```{r , echo=FALSE}
@@ -443,8 +445,8 @@ fourfoldplot(confusionMatrixGBM$table)
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 
 ```{r , echo=FALSE}
-model.predictGBM = predict(modelGBM, test, type="prob")
-plot.roc(test$outcome,model.predictGBM$F,          # data
+pred.GBM = predict(modelGBM, test, type="prob")
+plot.roc(test$outcome,pred.GBM$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -458,7 +460,7 @@ plot.roc(test$outcome,model.predictGBM$F,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, model.predictGBM$F,
+plot.roc(test$outcome, pred.GBM$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -514,10 +516,10 @@ ControlParamteres <- trainControl(method = "cv",
 * Ahora predecimos
 
 ```{r , echo=FALSE}
-predXGB<-predict(modelxgboost,test)
+pred.XGB<-predict(modelxgboost,test)
 #out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
 #levels(out_predGBOOST)=c("F","V")
-confusionMatrixGBOOST<-confusionMatrix(data = predXGB, reference = test$outcome,positive="F")
+confusionMatrixGBOOST<-confusionMatrix(data = pred.XGB, reference = test$outcome,positive="F")
 confusionMatrixGBOOST
 ```
 
@@ -526,8 +528,8 @@ fourfoldplot(confusionMatrixGBOOST$table)
 ```
 
 ```{r , echo=FALSE}
-predXGB<-predict(modelxgboost,test,type="prob")
-plot.roc(test$outcome,predXGB$F,          # data
+pred.XGB<-predict(modelxgboost,test,type="prob")
+plot.roc(test$outcome,pred.XGB$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -541,7 +543,7 @@ plot.roc(test$outcome,predXGB$F,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, predXGB$F,
+plot.roc(test$outcome, pred.XGB$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -662,9 +664,9 @@ plotnet(model.nn, alpha=0.6)
 ```
 
 ```{r , echo=FALSE}
-NNPredictions <-predict(model.nn, testNorm)
+pred.NN1 <-predict(model.nn, testNorm)
 
-confusionMatrixNET<-confusionMatrix(data=NNPredictions,reference=test$outcome,positive="F")
+confusionMatrixNET<-confusionMatrix(data=pred.NN1,reference=test$outcome,positive="F")
 confusionMatrixNET
 ```
 
@@ -672,8 +674,8 @@ confusionMatrixNET
 fourfoldplot(confusionMatrixNET$table)
 ```
 ```{r , echo=FALSE}
-predNET1<-predict(model.nn,test,type="prob")
-plot.roc(test$outcome,predNET1$F,          # data
+pred.NN1<-predict(model.nn,test,type="prob")
+plot.roc(test$outcome,pred.NN1$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -687,7 +689,7 @@ plot.roc(test$outcome,predNET1$F,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, predNET1$F,
+plot.roc(test$outcome, pred.NN1$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -730,20 +732,20 @@ model.nn2 <- train(outcome ~ .,
 
 * Predecimos
 ```{r , echo=FALSE}
-NNPredictions <-predict(model.nn2, testNormCor)
+pred.NN2 <-predict(model.nn2, testNormCor)
 
-confusionMatrixNET<-confusionMatrix(data=NNPredictions,reference=testNormCor$outcome,positive="F")
-confusionMatrixNET
+confusionMatrixNET2<-confusionMatrix(data=pred.NN2,reference=testNormCor$outcome,positive="F")
+confusionMatrixNET2
 ```
 
 ```{r , echo=FALSE}
-fourfoldplot(confusionMatrixNET$table)
+fourfoldplot(confusionMatrixNET2$table)
 ```
 
 
 ```{r , echo=FALSE}
-predNET2<-predict(model.nn2,testNormCor,type="prob")
-plot.roc(testNormCor$outcome,predNET2$F,          # data
+pred.NN2<-predict(model.nn2,testNormCor,type="prob")
+plot.roc(testNormCor$outcome,pred.NN2$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -757,7 +759,7 @@ plot.roc(testNormCor$outcome,predNET2$F,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(testNormCor$outcome, predNET2$F,
+plot.roc(testNormCor$outcome, pred.NN2$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -809,13 +811,21 @@ mod_fit_11<- train(outcome ~ age+ec,data = train, method="glm", family="binomial
                  trControl = ctrl, tuneLength = 5,metric="ROC")
 mod_fit_12<- train(outcome ~ age,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-dfarray <- list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_11) 
+dfarray <- list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_12) 
 
-aucSP = c()
-aucSE= c()
+dfPredictArray<-list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF)
+
 for (i in dfarray){
   predIter<-predict(i,test,type="prob")
-  auc1<-plot.roc(test$outcome,predIter$F,          # data
+  dfPredictArray<-c(dfPredictArray, list(predIter))
+}
+
+nameVector<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","mod_fit_Complete","mod_fit_1","mod_fit_2","mod_fit_3","mod_fit_4","mod_fit_5","mod_fit_6","mod_fit_7","mod_fit_8","mod_fit_9","mod_fit_10","mod_fit_11","mod_fit_12")
+
+aucSE= c()
+aucSP= c()
+for (i in 1:length(dfPredictArray)){
+  auc1<-plot.roc(test$outcome,dfPredictArray[[i]]$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -828,7 +838,7 @@ for (i in dfarray){
          max.auc.polygon = TRUE, 
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
-   auc2<-plot.roc(test$outcome, predIter$F,
+   auc2<-plot.roc(test$outcome, dfPredictArray[[i]]$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -848,12 +858,31 @@ for (i in dfarray){
 }
 ```
 ```{r , echo=FALSE}
-nameVector<-c("mod_fit_Complete","mod_fit_1","mod_fit_2","mod_fit_3","mod_fit_4","mod_fit_5","mod_fit_6","mod_fit_7","mod_fit_8","mod_fit_9","mod_fit_10","mod_fit_11","mod_fit_12")
-plot(aucSP,xaxt="n",type="b")
-axis(1,at=1:13,labels=nameVector, las = 2)
+
+plot(aucSP,xaxt="n",ann=FALSE,type="b", col="blue")
+par(new=TRUE)
+plot(aucSE,xaxt="n",yaxt='n',ann=FALSE,type="b", col="red")
+axis(1,at=1:length(nameVector),labels=nameVector, las = 2)
+axis(2,labels=FALSE)
+legend(x= "center", y="bottom", # places a legend at the appropriate place 
+       c("AUCsp","AUCse"), # puts text in the legend 
+lty=c(1,1), # gives the legend appropriate symbols (lines)
+
+lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color and width
+
 ```
 
 ```{r , echo=FALSE}
-plot(aucSE,xaxt="n",type="b")
-axis(1,at=1:13,labels=nameVector, las = 2)
+
+nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","Logistic Regression Comp","Logistic Regression")
+dfConfMatArray <- list(confusionMatrixNET,confusionMatrixNET2,confusionMatrixGBOOST,confusionMatrixGBM,confusionMatrixAdaBoost,confusionMatrixRF,confusionMatrixLOG,confusionMatrixLOG2) 
+accuracyArr<-c()
+kappa<-c()
+for (i in 1:length(dfConfMatArray)){
+  accuracy<-as.numeric(dfConfMatArray[[i]]$overall[1])
+  accuracyArr<-c(accuracyArr, accuracy)
+}
+plot(accuracyArr,xaxt="n",type="b", col="blue")
+axis(1,at=1:length(nameVectorConf),labels=nameVectorConf, las = 2)
+axis(2,labels=FALSE)
 ```
