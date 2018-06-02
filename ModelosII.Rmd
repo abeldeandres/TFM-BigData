@@ -476,6 +476,7 @@ plot.roc(test$outcome, model.predictGBM$F,
 ```
 
 ## XGBOOST
+
   * XGBoost es la abreviatura de 'Extreme Gradient Boosting'. Esta basado en en el modelo original GBM (ya estudiado anteriormente).
 
   * A continuacion se muestran algunas de las ventajas de XGBOOST frente GBM:
@@ -511,6 +512,7 @@ ControlParamteres <- trainControl(method = "cv",
 ```
 
 * Ahora predecimos
+
 ```{r , echo=FALSE}
 predXGB<-predict(modelxgboost,test)
 #out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
@@ -581,7 +583,7 @@ plot.roc(test$outcome, predXGB$F,
   + *Funcion de activacion de las capas ocultas:* Cambiar la función de activación puede ser un factor decisivo.Se pueden probar distintas funciones de activacion: sigmoide, tanh y unidades lineales rectificadas.
   + *Funcion de activacion de las capas de salida:* Para una sola capa la elección de la función de activación para la capa de salida dependerá de la tarea que realizaremos con la red (es decir, categorización o regresión). Sin embargo, en redes multicapas, generalmente es deseable que las capas ocultas tengan funciones de activación no lineales (por ejemplo, sigmoide, logística o tanh).
   
-
+### Usando todas las variables
 
 ```{r , echo=FALSE}
 #Max-Min Normalization
@@ -623,20 +625,32 @@ highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.50)
 highlyCorrelated
 ```
 
+* Para construir el modelo, una vez nos hemos ayudado con el paquete "Caret" y su validacion cruzada con 10 iteraciones.
+
+* En la construccion del modelo, es necesario probar distintos parametros, concretamente dos que son:
+  + Decay: es el parametro de los pesos.
+  + Size: es el numero de capas ocultas.
+  
+* Estos valores, se han ido probando mediante "fuerza bruta" hasta obtener los mejores valores de ROC.El parametro de Decay se ha ido variando desde 0.1 hasta 0.5 en 0.1 unidades. El parametro de "Size" se ha ido variando desde 1 hasta 10 en 1 unidad.
 
 ```{r , echo=FALSE, include=FALSE}
 set.seed(42)
 
-ctrl <- trainControl(method = "cv", number = 10 #,savePredictions = TRUE, 
-                     #classProbs = TRUE #give the probabilities for each class.Not just the class labels
-                     )
-nnetGrid <-  expand.grid(size = 1,
-                         decay = 0.007498942093)
-model.nn <- train(outcome~., data = trainNorm, 
-               method = "nnet", trControl = ctrl,
-               tuneGrid =nnetGrid
+fitControl <- trainControl(method = "repeatedcv", 
+                           number = 10, 
+                           repeats = 5, 
+                           classProbs = TRUE, 
+                           summaryFunction = twoClassSummary)
               
-            )
+nnetGrid <-  expand.grid(size = 6,decay = 0.5)
+
+model.nn <- train(outcome ~ ., 
+                 data = trainNorm,
+                 method = "nnet",
+                 metric = "ROC",
+                 trControl = fitControl,
+                 tuneGrid = nnetGrid,
+                 verbose = FALSE)
 #SOFTNEX
 #Neural net from caret only deals with regression and takes 3 params i.e. layers 1-3.
 #print(model.nn)
@@ -650,7 +664,75 @@ plotnet(model.nn, alpha=0.6)
 ```{r , echo=FALSE}
 NNPredictions <-predict(model.nn, testNorm)
 
-confusionMatrixNET<-confusionMatrix(data=NNPredictions,reference=testNorm$outcome,positive="F")
+confusionMatrixNET<-confusionMatrix(data=NNPredictions,reference=test$outcome,positive="F")
+confusionMatrixNET
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixNET$table)
+```
+```{r , echo=FALSE}
+predNET1<-predict(model.nn,test,type="prob")
+plot.roc(test$outcome,predNET1$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, predNET1$F,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
+
+### Eliminamos las variables mas correladas: Verbal
+
+```{r , echo=FALSE, include=FALSE}
+set.seed(42)
+trainNormCor <-trainNorm[,-7]
+testNormCor <-testNorm[,-7]
+fitControl <- trainControl(method = "repeatedcv", 
+                           number = 10, 
+                           repeats = 5, 
+                           classProbs = TRUE, 
+                           summaryFunction = twoClassSummary)
+              
+nnetGrid <-  expand.grid(size = 6,decay = 0.5)
+
+model.nn2 <- train(outcome ~ ., 
+                 data = trainNormCor,
+                 method = "nnet",
+                 metric = "ROC",
+                 trControl = fitControl,
+                 tuneGrid = nnetGrid,
+                 verbose = FALSE)
+#print(model.nn)
+```
+
+* Predecimos
+```{r , echo=FALSE}
+NNPredictions <-predict(model.nn2, testNormCor)
+
+confusionMatrixNET<-confusionMatrix(data=NNPredictions,reference=testNormCor$outcome,positive="F")
 confusionMatrixNET
 ```
 
@@ -658,29 +740,120 @@ confusionMatrixNET
 fourfoldplot(confusionMatrixNET$table)
 ```
 
-* Eliminamos las variables mas correladas: Verbal
 
-```{r , echo=FALSE, include=FALSE}
-set.seed(42)
-trainNormCor <-trainNorm[,-7]
-testNormCor <-testNorm[,-7]
-ctrl <- trainControl(method = "cv", number = 10 ,savePredictions = TRUE, 
-                     classProbs = TRUE #give the probabilities for each class.Not just the class labels
-                   )
-nnetGrid <-  expand.grid(size = 1,
-                         decay = 0.007498942093)
-model.nn <- train(outcome~., data = trainNormCor, 
-               method = "nnet", trControl = ctrl,
-               linout = FALSE, preProcess=c("scale","center"),
-               tuneGrid =nnetGrid,
-               na.action = na.omit)
-#print(model.nn)
+```{r , echo=FALSE}
+predNET2<-predict(model.nn2,testNormCor,type="prob")
+plot.roc(testNormCor$outcome,predNET2$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(testNormCor$outcome, predNET2$F,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
 ```
 
-* Predecimos
-```{r , echo=FALSE}
-NNPredictions <-predict(model.nn, testNorm)
+## VALIDACION DE MODELOS
 
-confusionMatrixNET<-confusionMatrix(data=NNPredictions,reference=testNorm$outcome,positive="F")
-confusionMatrixNET
+### Comparación de modelos de regresión
+
+
+```{r , echo=FALSE, include=FALSE}
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE,classProbs=TRUE,
+summaryFunction=twoClassSummary)
+mod_fit_Complete <- train(outcome ~ .,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_1<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause+pupils+sex,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+
+mod_fit_2<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause+pupils,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_3<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_4<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_5<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_6<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_7<- train(outcome ~ age+ec+verbal+hmt+motor+eye,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_8<- train(outcome ~ age+ec+verbal+hmt+motor,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_9<- train(outcome ~ age+ec+verbal+hmt,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_10<- train(outcome ~ age+ec+verbal,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_11<- train(outcome ~ age+ec,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+mod_fit_12<- train(outcome ~ age,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC")
+dfarray <- list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_11) 
+
+aucSP = c()
+aucSE= c()
+for (i in dfarray){
+  predIter<-predict(i,test,type="prob")
+  auc1<-plot.roc(test$outcome,predIter$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+   auc2<-plot.roc(test$outcome, predIter$F,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+  aucSP<-c(aucSP, as.numeric(auc1$auc))
+  aucSE<-c(aucSE, as.numeric(auc2$auc))
+}
+```
+```{r , echo=FALSE}
+nameVector<-c("mod_fit_Complete","mod_fit_1","mod_fit_2","mod_fit_3","mod_fit_4","mod_fit_5","mod_fit_6","mod_fit_7","mod_fit_8","mod_fit_9","mod_fit_10","mod_fit_11","mod_fit_12")
+plot(aucSP,xaxt="n",type="b")
+axis(1,at=1:13,labels=nameVector, las = 2)
+```
+
+```{r , echo=FALSE}
+plot(aucSE,xaxt="n",type="b")
+axis(1,at=1:13,labels=nameVector, las = 2)
 ```
