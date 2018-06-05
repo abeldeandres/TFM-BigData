@@ -331,9 +331,9 @@ plot(model.ada1)
 * Sin embargo, realizando pruebas mas exaustivas y utilizando la fuerza bruta con el paquete de "caret" y jugando con los valores de los argumentos necesarios en adaboost, hemos obtenido mejores resultados.
 
 * Los parametros con los que hemos hecho la fuerza bruta ha sido con los siguientes:
-  + iter: Se ha iterado desde 1 hasta 200 de diez en diez.
-  + maxdepth: Se ha iterado desde 1 hasta 10 de uno en uno.
-  + nu: Se ha iterado desde 0.1 a 0.4 de 0.1 en 0.1.
+  + iter: número de iteraciones de refuerzo para realizar. Se ha iterado desde 1 hasta 200 de diez en diez.
+  + maxdepth: Profundidad (complejidad) del arbol. Se ha iterado desde 1 hasta 10 de uno en uno.
+  + nu: parámetro de contracción. Se ha iterado desde 0.1 a 0.4 de 0.1 en 0.1.
 
 * Con estas iteraciones se ha conseguido que para construir el mejor modelo, se necesitan los siguientes parametros: 
   + iter=141
@@ -525,6 +525,16 @@ plot.roc(test$outcome, pred.GBM$F,
     + Manejo de valores perdidos: XGBoost tiene una rutina incorporada para manejar los valores perdidos.
     + Poda: El algoritmo GBM dejaría de dividir un nodo cuando encuentre una pérdida negativa en una división. Por lo tanto XGBoost es mas codicioso. XGBoost por otro lado hace divisiones hasta la **max_depth** especificada y luego comienza a podar el árbol hacia atrás y a eliminar divisiones de las cuales no hay ganancia positiva.
     + Incorpora Cross-Validation: XGBoost permite al usuario ejecutar una validación cruzada en cada iteración del proceso de "boosting" y, por lo tanto, es fácil obtener el número óptimo  de iteraciones de "boosting" en una sola ejecución. Con GBM tenemos que ejecutar una búsqueda en cuadrícula y solo se pueden probar valores limitados.
+    
+  * Igual que con los modelos construidos con anterioridad, vamos a volver a utilizar "caret" para la validacion cruzada, ademas utilizaremos los siguientes parametros de ajuste para XGBoost que nos ofrece el paquete "xgbtree":
+    + nrounds:Es el número de iteraciones que el modelo ejecuta antes de que se detenga. Con el valor más alto del modelo nrounds tomará más tiempo y viceversa.
+    + max_depth (Profundidad máxima del árbol):Un valor alto de max_depth creará árboles más profundos, es decir, creará un modelo más complejo. Un valor más alto de max_depth puede crear un ajuste excesivo y un valor inferior de max_depth puede crear un ajuste insuficiente. Todo depende de los datos disponibles. 
+    + eta (Shrinkage): Con un valor alto, el modelo funcionará más rápido y viceversa. Con un "eta" más alto y un menor "round", el modelo tardará menos tiempo en ejecutarse. Con un "eta" menor y un modelo de "nround" más alto tomará más tiempo.
+    + gamma (reducción de pérdida mínima): Para crear una partición adicional en un nodo hoja del árbol Se requiere una reducción de pérdida mínima.
+    + colsample_bytree (proporción de columnas de la submuestra): Se escogen aleatoriamente columnas de entre todas las columnas o variables durante el proceso de construccion del arbol. Es similar al parametro de "mtry" de los "Random Forest". Un valor alto puede crear un ajuste excesivo (overfitting) y un valor pequeño puede crear un ajuste insuficiente.
+    + min_child_weight (suma mínima del peso de la instancia): Si el paso de la partición del árbol da como resultado un nodo hoja con la suma del peso de la instancia menor que min_child_weight, entonces el proceso de construcción dejará de particionar más.
+
+    
 
 ```{r , echo=FALSE}
 
