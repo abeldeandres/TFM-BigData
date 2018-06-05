@@ -208,7 +208,7 @@ plot.roc(test$outcome, predCV1$F,
          max.auc.polygon.col = "#00860022")
 ```
 
-## RANDOM FOREST u otros modelos de arboles (GBM, Adaboost, XGBM, etc.)
+## RANDOM FOREST
 
 * Random forest es otra técnica de aprendizaje automático y nace como mejora sustancial de los árboles simples. Combina una cantidad grande de árboles de decisión independientes probados sobre conjuntos de datos aleatorios con igual distribución.
 
@@ -308,7 +308,8 @@ plot.roc(test$outcome, pred.RF$V,
 
 * Las caracteristicas que lo convierten en un buen metodo son: su capacidad de evadir el **overfitting** y su menor porcentaje de error a cambio de tener un error mayor durante el entrenamiento.
 
-* En primer lugar vamos a utilizar el paquete de "caret" con el objetivo de encontrar el modelo optimo usando adaboost. Aplicaremos la validación cruzada, iterando 10 veces.
+* En primer lugar vamos a utilizar el paquete de "caret" con el objetivo de encontrar el modelo optimo usando adaboost. Aplicaremos la validación cruzada.
+
 
 ```{r , echo=FALSE}
 set.seed(42)
@@ -324,13 +325,26 @@ plot(model.ada1)
 ```
 
 * Como se puede comprobar en el grafico anterior, con 3 iteraciones, conseguimos una mayor precision (0.767).
+
 * Tambien podemos comprobar como el paquete caret nos indica cuales son los mejores parametros que debemos utilizar para obtener la mejor precision.
+
+* Sin embargo, realizando pruebas mas exaustivas y utilizando la fuerza bruta con el paquete de "caret" y jugando con los valores de los argumentos necesarios en adaboost, hemos obtenido mejores resultados.
+
+* Los parametros con los que hemos hecho la fuerza bruta ha sido con los siguientes:
+  + iter: Se ha iterado desde 1 hasta 200 de diez en diez.
+  + maxdepth: Se ha iterado desde 1 hasta 10 de uno en uno.
+  + nu: Se ha iterado desde 0.1 a 0.4 de 0.1 en 0.1.
+
+* Con estas iteraciones se ha conseguido que para construir el mejor modelo, se necesitan los siguientes parametros: 
+  + iter=141
+  + maxdepth=1
+  + nu=0.3
 
 * Con estos parametros (numero de iteraciones, maxima profundidad y nu -parametro para truncar-) construimos nuestro modelo:
 
 ```{r , echo=FALSE}
 set.seed(42)
-model.ada<-ada(outcome~.,data=train,iter=150,nu=0.1,control=rpart.control(maxdepth=2))
+model.ada<-ada(outcome~.,data=train,iter=141,nu=0.3,control=rpart.control(maxdepth=1))
 
 print(model.ada)
 ```
@@ -414,6 +428,9 @@ plot.roc(test$outcome, pred.ada$V,
 
 * El modelo de GBM tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en los modelos anteriores.
 
+
+* A continuacion construimos el modelo automaticamente utilizando el paquete de "caret", igual que en ejemplos anteriores se ha utilizado la validacion cruzada.
+
 ```{r , echo=FALSE}
 #https://rpubs.com/omicsdata/gbm
 set.seed(42)
@@ -429,7 +446,27 @@ print(modelGBM)
 plot(modelGBM)
 ```
 
+* Vemos que al construir al construir el modelo automaticamente, se utilizan los siguientes valores:
+  + n.trees = 100. Numero de iteraciones.
+  + shrinkage = 0.1.Es el ratio de aprendizaje. Simboliza la velocidad a la que se adapta el algoritmo.
+  + interaction.depth = 1. Este parametro es la complejidad del arbol.
+  + n.minobsinnode = 10. Es el número mínimo de muestras del conjunto de entrenamiento para que un nodo comience a dividirse.
+
+* Tambien podemos observar en el grafico es que la mejor precision se consigue con una iteracion de 100.
+
+* Vamos a construir otro modelo utilizando fuerza bruta. El objetivo es obtener una mejor precision jugando con los parametros ya vistos para este modelo anteriormente.
+
+* Para ello:
+  + Iteramos la variable n.trees de 1 a 200 aumentando 10.
+  + Iteramos la variable interaction.depth de 1 a 5 aumentando 1.
+  + Iteramos la variable shrinkage de 0.1 a 0.4 aumentando 0.1.
+  + Iteramos la variable n.minobsinnode de 1 a 15 aumentando 1.
+  
+* Utilizando esta configuracion, se ha obtenido resultados similares en la precision.
+
 * Después de construir el modelo, vamos a predecir utilizando los datos de test, con el objetivo de obtener la precision de este.
+
+
 
 ```{r , echo=FALSE}
 pred.GBM = predict(modelGBM, test, na.action = na.pass)
@@ -778,7 +815,8 @@ plot.roc(testNormCor$outcome, pred.NN2$F,
 
 ## VALIDACION DE MODELOS
 
-### Comparación de modelos de regresión
+### Comparación de modelos usando el AUCsp y AUCse
+
 
 
 ```{r , echo=FALSE, include=FALSE}
@@ -872,6 +910,8 @@ lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color a
 
 ```
 
+### Comparación de modelos usando la precisión.
+
 ```{r , echo=FALSE}
 
 nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","Logistic Regression Comp","Logistic Regression")
@@ -886,3 +926,5 @@ plot(accuracyArr,xaxt="n",type="b", col="blue")
 axis(1,at=1:length(nameVectorConf),labels=nameVectorConf, las = 2)
 axis(2,labels=FALSE)
 ```
+
+* Como se puede observar en el grafico anterior, usando XGBoost se alcanza respecto al resto de los modelos. Esto significa que es capaz de precedir y de obtener el mayor numero de verdaderos negativos (TN) y verdaderos positivos (TN).
