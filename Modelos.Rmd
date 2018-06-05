@@ -1,6 +1,8 @@
 ---
 title: "Modelos"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -8,7 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 options(Encoding="UTF-8")
 ```
 
-##USO DE MODELOS
+##PRE-PROCESADO DE DATOS
+
 ###Búsqueda de OUTLIERS (datos anomálos)
 ```{r , echo=FALSE, include=FALSE}
 library(normtest) ###REALIZA 5 PRUEBAS DE NORMALIDAD###
@@ -33,7 +36,7 @@ final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv"
 ```
 * Se ha realizado un diagrama de caja para el conjunto de nuestro dataset
 ```{r , echo=FALSE}
-boxplot(final)
+boxplot(final,las = 2)
 ```
 * Nos hemos dado cuenta que existen numerosos datos anomalos "Outliers" en la variable de edad.
 ```{r , echo=FALSE}
@@ -96,6 +99,8 @@ cor(final$age, final$outcome, method=c("pearson"))
     ```
 
   * Como se puede comprobar, la eliminación de los *outliers* no ha afectado demasiado a las variables estadisticos por lo que no existe motivo para su eliminación.
+  
+  * Por otro lado es necesario destacar que estos pacientes cuya edad es anomala (estadísticamente), en la naturaleza tampoco se consideran pacientes anomalos, ya que se encuentran en un rango de edades en las que sufrir un traumatismo craneocefálico es totalmente posible.
 
 ###ANÁLISIS DE NORMALIDAD
 
@@ -128,17 +133,17 @@ plot(density(final$outcome))
   * Otro aspecto a tener en cuenta es que para que un conjunto de datos (teniendo en cuenta todas las variables) posea una distribucion normal, es necesario que todas las variables verifiquen normalidad univariante, ya que es una condicion necesaria (aunque no suficiente). Por lo tanto rechazamos la hipotesis de normalidad del conjunto de datos. 
   * Aún así, comprobaremos los resultados obtenidos mediante el Test de normalidad de Mardia:
 
-```{r eval=FALSE, , echo=FALSE, include=FALSE}
+```{r , echo=FALSE}
 
 mardia(final)
 
 
 ```
   * Tambien vamos a utilizar el test de Henze-Zirkler:
-```{r eval=FALSE, , echo=FALSE, include=FALSE}
+```{r  , echo=FALSE}
 h<-HZ.test(final, qqplot = TRUE)
 ```
-```{r eval=FALSE, , echo=FALSE, include=FALSE}
+```{r , echo=FALSE}
 h
 ```
   * Como se puede comprobar, al ser el p-value menor de 0.05 en ambos test, los datos no se ajustan a una distribución normal.
