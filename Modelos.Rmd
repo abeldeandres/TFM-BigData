@@ -30,7 +30,9 @@ library(ggpubr) #correlaciones
 library(reshape) #random forest
 library(corpcor) #correlaciones parciales
 library(MASS) #Stepwise
+library(caret)
 
+set.seed(42)
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 ```
@@ -342,6 +344,38 @@ step<-stepAIC(full,trace=FALSE)
 step$anova
 ```
 * Una vez mas podemos comprobar que las variables de *"cause"* y *"sex"* son las que se descartan usando este algoritmo.
+
+* A continuación se va a utilizar la funcion train() del paquete caret que proporciona un flujo de trabajo sencillo para realizar selecciones paso a paso. Para esta prueba se ha utilizado la validacion cruzada con 10 iteraciones para estimar el error promedio de predicción (RMSE) de cada uno de los modelos. La métrica estadística RMSE se usa para comparar los modelos y elegir automáticamente el mejor, donde el mejor se define como el modelo que minimiza el RMSE.
+
+* Se ha utilizado el parametro "nvmax" que corresponde al número máximo de predictores que se incorporarán en el modelo. Nosotros hemos utilizado todos.
+
+* El parametro "nvmax" busca el mejor modelo de 1 variable, el mejor modelo de 2 variables, de 3, etc.
+
+```{r , echo=FALSE, include=FALSE}
+set.seed(42)
+# Set up repeated k-fold cross-validation
+train.control <- trainControl(method = "cv", number = 10)
+# Train the model
+step.model <- train(outcome ~., data = final,
+                    method = "leapSeq", 
+                    tuneGrid = data.frame(nvmax = 1:13),
+                    trControl = train.control
+                    )
+
+```
+
+* A continuacion el numero de variables que se utilizan para construir el mejor modelo.
+```{r , echo=FALSE}
+step.model$bestTune
+```
+
+* Por ultimo mostramos todos los modelos creados utilizando la funcion summary().
+```{r , echo=FALSE}
+summary(step.model$finalModel)
+```
+* Un asterisco especifica que la variable dada se incluye en el modelo correspondiente.
+
+* Vemos que el mejor modelo contendria 11 variables y seria aquel que tendria en cuenta todos los predictores menos los predictores "sex" y "cause" como era de esperar.
 
 #Analisis de PCA
 * En primer lugar, antes de proceder con el analisis de componentes principales, vamos a tener en cuenta la matriz de correlaciones, puesto que un PCA tiene sentido si existen altas correlaciones entre las variables, ya que como se ha comentado con anteriorirdad, esto es indicativo de que existe informacion redundante y, por tanto, pocos factores explicaran gran parte de la variabilidad total.
