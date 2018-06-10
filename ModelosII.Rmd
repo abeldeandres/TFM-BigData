@@ -25,6 +25,7 @@ library(corrplot)
 library(pROC)
 library(ROCR) 
 library(mlbench)
+library(elmNN) #Redes neuronales
 
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
@@ -86,12 +87,12 @@ test <- final[!ind,]
 ```
 
 ## REGRESION LOGISTICA 
+
 ### Usando todos los predictores
-#### Usando Cross Validation 10-fold
 * En primer lugar vamos a construir nuestro modelo de regresion logistica con los datos de entrenamiento.
 ```{r , echo=FALSE}
 set.seed(42)
-ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE,classProbs=TRUE,
+ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
 mod_fit <- train(outcome ~ .,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
@@ -154,7 +155,7 @@ plot.roc(test$outcome, predCV$F,
 
 ```{r , echo=FALSE}
 set.seed(42)
-ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE,classProbs=TRUE,
+ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
 mod_fit1 <- train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="glm", family="binomial",trControl = ctrl, tuneLength = 5,metric="ROC")
 ```
@@ -208,6 +209,103 @@ plot.roc(test$outcome, predCV1$F,
          max.auc.polygon.col = "#00860022")
 ```
 
+## NAIVES BAYES
+*Las redes bayesianas, junto con los árboles de decisión y las redes neuronales artificiales, han sido los tres métodos más usados en aprendizaje automático durante estos últimos años en tareas como la clasificación.
+
+* La idea de Naïve Bayes es sencilla y es usar las probabilidades condicionales de los valores de una variable para determinar a qué categoría pertenece, estas probabilidades se calculan con el teorema de Bayes.
+
+* Por ejemplo, si quisieramos clasificar la valoracion de un determinado servicio, podriamos hacerlo en dos categorias, "positiva" y "negativa"; de esta forma, tenemos que determinar que palabras son mas probables de encontrar en cada una de estas categorias. Se puede intuir que es mas probable que una valoracion pertenezca a la categoria "positiva", si los valores son "bueno" o "excelente" y menos probable si contiene palabras como "malo" o "deficiente".
+
+*Por tanto, deberemos obtener la probabilidad de que una valoracion pertenezca a la categoria "positiva", dado que la valoracion contiene la palabra "excelente". Por tanto deberiamos calcular p(positiva|excelente)
+
+* Debido a que este algoritmo calcula las probabilidades de cada valor por separado, como si los valores fueran independientes unos de otros, se conoce como "ingenuo". Lo que se hace, por lo tanto, es calcular la probabilidad condicional de cada valor, asumiendo de forma "ingenua", que en esta probabilidad no importa cuales valores de variables lo acompañan en cada registro.
+
+* En este caso, tambien vamos a utilizar el paquete de caret para realizar el entrenamiento del modelo. Utilizaremos tambien la validacion cruzada con 10 iteraciones.
+
+* Los parametros con los que hemos hecho la fuerza bruta ha sido los siguientes:
+  + useKernel: tipo de distribucion
+  + fL: la corrección de Laplace
+  + adjust: Ajuste de ancho de banda
+
+```{r , echo=FALSE, include=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  usekernel = c(TRUE,FALSE),
+  fL = seq(from = 0, to = 2, by = 1),
+  adjust = seq(from = 0, to = 2, by = 1)
+)
+
+trainControl <- trainControl(method="cv", number=10)
+metric <- "Accuracy"
+model.nb <- train(outcome~., data=train, method="nb", 
+                  trControl=trainControl,metric=metric,tuneGrid = nnetGrid
+                  )
+```
+
+```{r , echo=FALSE}
+print(model.nb)
+```
+
+```{r , echo=FALSE}
+plot(model.nb)
+```
+* Con estas iteraciones se ha conseguido que para construir el mejor modelo, se necesitan los siguientes parametros: 
+  + fL=0
+  + usekernel=FALSE
+  + nu=0
+  
+* Una vez hecho esto, pasamos a predecir usando el modelo construido y los datos de test.
+
+```{r , echo=FALSE, include=FALSE}
+pred.NB<-predict(model.nb,test)
+confusionMatrixNaive<-confusionMatrix(data = pred.NB, reference = test$outcome,positive="F")
+
+```
+
+*Mostramos la matriz de confusion.
+```{r , echo=FALSE}
+confusionMatrixNaive
+```
+
+```{r , echo=FALSE}
+fourfoldplot(confusionMatrixNaive$table)
+```
+
+* A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
+```{r warning=FALSE, , echo=FALSE}
+pred.NB <- predict(model.nb, newdata = test, type="prob")
+pred.NB<-data.frame(pred.NB)
+colnames(pred.NB) <- c("F", "V")
+plot.roc(test$outcome, pred.NB$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, pred.NB$V,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
 ## RANDOM FOREST
 
 * Random forest es otra técnica de aprendizaje automático y nace como mejora sustancial de los árboles simples. Combina una cantidad grande de árboles de decisión independientes probados sobre conjuntos de datos aleatorios con igual distribución.
@@ -676,44 +774,49 @@ highlyCorrelated
 
 * Para construir el modelo, una vez nos hemos ayudado con el paquete "Caret" y su validacion cruzada con 10 iteraciones.
 
-* En la construccion del modelo, es necesario probar distintos parametros, concretamente dos que son:
-  + Decay: es el parametro de los pesos.
-  + Size: es el numero de capas ocultas.
+* En la construccion del modelo, es necesario probar distintos parametros, concretamente:
+  + actfun: es la funcion de activación.
+  + nhid: es el numero de capas ocultas.
   
-* Estos valores, se han ido probando mediante "fuerza bruta" hasta obtener los mejores valores de ROC.El parametro de Decay se ha ido variando desde 0.1 hasta 0.5 en 0.1 unidades. El parametro de "Size" se ha ido variando desde 1 hasta 10 en 1 unidad.
+* Estos valores, se han ido probando mediante "fuerza bruta" hasta obtener los mejores valores de precisión.El parametro de "actfun" ira variando entre todas las funciones de activación. El parametro de "nhid" se ha ido variando desde 0 hasta 50 en 1 unidad.
 
 ```{r , echo=FALSE, include=FALSE}
 set.seed(42)
 
-fitControl <- trainControl(method = "repeatedcv", 
-                           number = 10, 
-                           repeats = 5, 
-                           classProbs = TRUE, 
-                           summaryFunction = twoClassSummary)
-              
-nnetGrid <-  expand.grid(size = 6,decay = 0.5)
+fitControl <- trainControl(method = "cv", number = 10, returnResamp = "all", search = "random",classProbs = TRUE,summaryFunction = twoClassSummary 
+                          
+                         )
+
+nnetGrid <-  expand.grid(
+  nhid = seq(from = 1, to = 50, by = 1),
+  actfun= c("sig","sin","radbas","hardlim","hardlims","satlins","tansig","tribas","poslin","purelin")
+)
+
+elm_fun <- getModelInfo("elm")[[1]]
+elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
+  out <- exp(predict(modelFit, newdata))
+  t(apply(out, 1, function(x) x/sum(x)))
+}
 
 model.nn <- train(outcome ~ ., 
                  data = trainNorm,
-                 method = "nnet",
-                 metric = "ROC",
+                 method = elm_fun,
                  trControl = fitControl,
-                 tuneGrid = nnetGrid,
-                 verbose = FALSE)
-#SOFTNEX
-#Neural net from caret only deals with regression and takes 3 params i.e. layers 1-3.
-#print(model.nn)
+                 tuneGrid = nnetGrid
+                 )
+print(model.nn)
 ```
 
 
 ```{r , echo=FALSE}
-plotnet(model.nn, alpha=0.6)
+plot(model.nn)
 ```
+* Como se puede observar en el grafico anterior, la funcion de activacion que nos proporciona una mayor precision es "purelin", que es una funcion de activacion puramente lineal.
 
 ```{r , echo=FALSE}
 pred.NN1 <-predict(model.nn, testNorm)
 
-confusionMatrixNET<-confusionMatrix(data=pred.NN1,reference=test$outcome,positive="F")
+confusionMatrixNET<-confusionMatrix(data=pred.NN1,reference=testNorm$outcome,positive="F")
 confusionMatrixNET
 ```
 
@@ -721,8 +824,8 @@ confusionMatrixNET
 fourfoldplot(confusionMatrixNET$table)
 ```
 ```{r , echo=FALSE}
-pred.NN1<-predict(model.nn,test,type="prob")
-plot.roc(test$outcome,pred.NN1$F,          # data
+pred.NN1<-predict(model.nn,testNorm,type="prob")
+plot.roc(testNorm$outcome,pred.NN1$F,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -736,7 +839,7 @@ plot.roc(test$outcome,pred.NN1$F,          # data
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
 
-plot.roc(test$outcome, pred.NN1$F,
+plot.roc(testNorm$outcome, pred.NN1$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -759,21 +862,30 @@ plot.roc(test$outcome, pred.NN1$F,
 set.seed(42)
 trainNormCor <-trainNorm[,-7]
 testNormCor <-testNorm[,-7]
-fitControl <- trainControl(method = "repeatedcv", 
-                           number = 10, 
-                           repeats = 5, 
-                           classProbs = TRUE, 
-                           summaryFunction = twoClassSummary)
-              
-nnetGrid <-  expand.grid(size = 6,decay = 0.5)
+
+
+fitControl <- trainControl(method = "cv", number = 10, returnResamp = "all", search = "random",classProbs = TRUE,summaryFunction = twoClassSummary 
+                          
+                         )
+
+nnetGrid <-  expand.grid(
+  nhid = seq(from = 1, to = 50, by = 1),
+  actfun= c("sig","sin","radbas","hardlim","hardlims","satlins","tansig","tribas","poslin","purelin")
+)
+
+elm_fun <- getModelInfo("elm")[[1]]
+elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
+  out <- exp(predict(modelFit, newdata))
+  t(apply(out, 1, function(x) x/sum(x)))
+}
 
 model.nn2 <- train(outcome ~ ., 
                  data = trainNormCor,
-                 method = "nnet",
-                 metric = "ROC",
+                 method = elm_fun,
                  trControl = fitControl,
-                 tuneGrid = nnetGrid,
-                 verbose = FALSE)
+                 tuneGrid = nnetGrid
+                 )
+print(model.nn2)
 #print(model.nn)
 ```
 
@@ -823,11 +935,10 @@ plot.roc(testNormCor$outcome, pred.NN2$F,
          max.auc.polygon.col = "#00860022")
 ```
 
+
 ## VALIDACION DE MODELOS
 
 ### Comparación de modelos usando el AUCsp y AUCse
-
-
 
 ```{r , echo=FALSE, include=FALSE}
 ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE,classProbs=TRUE,
@@ -861,14 +972,14 @@ mod_fit_12<- train(outcome ~ age,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
 dfarray <- list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_12) 
 
-dfPredictArray<-list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF)
+dfPredictArray<-list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF,pred.NB)
 
 for (i in dfarray){
   predIter<-predict(i,test,type="prob")
   dfPredictArray<-c(dfPredictArray, list(predIter))
 }
 
-nameVector<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","mod_fit_Complete","mod_fit_1","mod_fit_2","mod_fit_3","mod_fit_4","mod_fit_5","mod_fit_6","mod_fit_7","mod_fit_8","mod_fit_9","mod_fit_10","mod_fit_11","mod_fit_12")
+nameVector<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","mod_fit_Complete","mod_fit_1","mod_fit_2","mod_fit_3","mod_fit_4","mod_fit_5","mod_fit_6","mod_fit_7","mod_fit_8","mod_fit_9","mod_fit_10","mod_fit_11","mod_fit_12")
 
 aucSE= c()
 aucSP= c()
@@ -924,15 +1035,15 @@ lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color a
 
 ```{r , echo=FALSE}
 
-nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","Logistic Regression Comp","Logistic Regression")
-dfConfMatArray <- list(confusionMatrixNET,confusionMatrixNET2,confusionMatrixGBOOST,confusionMatrixGBM,confusionMatrixAdaBoost,confusionMatrixRF,confusionMatrixLOG,confusionMatrixLOG2) 
+nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","Logistic Regression Comp","Logistic Regression")
+dfConfMatArray <- list(confusionMatrixNET,confusionMatrixNET2,confusionMatrixGBOOST,confusionMatrixGBM,confusionMatrixAdaBoost,confusionMatrixRF,confusionMatrixNaive,confusionMatrixLOG,confusionMatrixLOG2) 
 accuracyArr<-c()
 kappa<-c()
 for (i in 1:length(dfConfMatArray)){
   accuracy<-as.numeric(dfConfMatArray[[i]]$overall[1])
   accuracyArr<-c(accuracyArr, accuracy)
 }
-plot(accuracyArr,xaxt="n",type="b", col="blue")
+plot(accuracyArr,xaxt="n",ann=FALSE,type="b", col="blue")
 axis(1,at=1:length(nameVectorConf),labels=nameVectorConf, las = 2)
 axis(2,labels=FALSE)
 ```
