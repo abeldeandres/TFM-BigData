@@ -1,6 +1,8 @@
 ---
 title: "ModelosII"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -59,8 +61,7 @@ final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
     + Para modelos de clasificacion
       + Overall Accuracy
       + Kappa Statistics
-      + Sensibilidad: nos indica la capacidad de nuestro estimador para dar como casos positivos los casos realmente positivos.Proporcion de fallecidos correctamente identificados. Si predice que fallece, entonces que realmente fallezca.
-      +Especificidad:nos indica la capacidad de nuestro estimador para dar como casos negativos los casos realmente negativos (que los usuarios esten vivos); proporción de vivos correctamente identificados.
+
       
 ### OVERFITTING     
 * El overfitting, tambien llamado sobreajuste: es el efecto que se da al entrenar de mas un algoritmo de aprendizaje, de este modo el algoritmo queda muy ajustado a caracteristicas muy especificas y por lo tanto, su respuesta a nuevos datos empeora.
@@ -804,7 +805,7 @@ model.nn <- train(outcome ~ .,
                  trControl = fitControl,
                  tuneGrid = nnetGrid
                  )
-print(model.nn)
+model.nn
 ```
 
 
@@ -885,8 +886,12 @@ model.nn2 <- train(outcome ~ .,
                  trControl = fitControl,
                  tuneGrid = nnetGrid
                  )
-print(model.nn2)
+model.nn2
 #print(model.nn)
+```
+
+```{r , echo=FALSE}
+plot(model.nn2)
 ```
 
 * Predecimos
@@ -979,7 +984,7 @@ for (i in dfarray){
   dfPredictArray<-c(dfPredictArray, list(predIter))
 }
 
-nameVector<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","mod_fit_Complete","mod_fit_1","mod_fit_2","mod_fit_3","mod_fit_4","mod_fit_5","mod_fit_6","mod_fit_7","mod_fit_8","mod_fit_9","mod_fit_10","mod_fit_11","mod_fit_12")
+nameVector<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","RLog_Comp","RLog_1","RLog_2","RLog_3","RLog_4","RLog_5","RLog_6","RLog_7","RLog_8","RLog_9","RLog_10","RLog_11","RLog_12")
 
 aucSE= c()
 aucSP= c()
@@ -1049,3 +1054,5 @@ axis(2,labels=FALSE)
 ```
 
 * Como se puede observar en el grafico anterior, usando XGBoost se alcanza respecto al resto de los modelos. Esto significa que es capaz de precedir y de obtener el mayor numero de verdaderos negativos (TN) y verdaderos positivos (TN).
+
+
