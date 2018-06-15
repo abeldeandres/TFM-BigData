@@ -1023,6 +1023,7 @@ for (i in 1:length(dfPredictArray)){
   aucSE<-c(aucSE, as.numeric(auc2$auc))
 }
 ```
+
 ```{r , echo=FALSE}
 
 plot(aucSP,xaxt="n",ann=FALSE,type="b", col="blue")
@@ -1037,6 +1038,59 @@ lty=c(1,1), # gives the legend appropriate symbols (lines)
 lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color and width
 
 ```
+####Comparacion entre todos los modelos distintos
+```{r , echo=FALSE}
+auc= c()
+colores <-  c("blue","red", "orange", "yellow",
+"green", "brown", "purple", "indianred", "aliceblue","antiquewhite","aquamarine","beige","black","blueviolet","burlywood","cadetblue","chocolate","coral","cornflowerblue","cyan","darkgrey")
+color1 <-colores[1:9]
+nameVector1<-nameVector[1:9]
+png(filename = "RplotROCComp1.png",
+    width = 600, height = 600,res = 130, units = "px", pointsize = 12,
+     bg = "white")
+for (i in 1:9){
+  resRoc <- roc(test$outcome, dfPredictArray[[i]]$F)
+  auc<-c(auc, as.numeric(resRoc$auc))
+  if( i==1){
+    plot(resRoc, col=colores[i])
+  }else{
+    plot(resRoc, col=colores[i],add=TRUE)
+  }
+  
+}
+legend(x= "right", y="bottom", legend=nameVector1,
+       col=color1, lty=1:2, cex=0.8,
+       title="Modelos", text.font=4, bg='lightblue')
+```
+####Comparacion con AUC de Regresion Logistica (sus modelos)
+```{r , echo=FALSE}
+color2 <-colores[9:length(dfPredictArray)]
+nameVector2<-nameVector[9:length(dfPredictArray)]
+png(filename = "RplotROCComp2.png",
+    width = 600, height = 600,res = 130, units = "px", pointsize = 12,
+     bg = "white")
+for (i in 9:length(dfPredictArray)){
+  resRoc <- roc(test$outcome, dfPredictArray[[i]]$F)
+  auc<-c(auc, as.numeric(resRoc$auc))
+  if( i==9){
+    plot(resRoc, col=colores[i])
+  }else{
+    plot(resRoc, col=colores[i],add=TRUE)
+  }
+  
+}
+legend(x= "right", y="bottom", legend=nameVector2,
+       col=color2, lty=1:2, cex=0.8,
+       title="Modelos", text.font=4, bg='lightblue')
+```
+####Comparacion con AUC de Regresion Logistica (sus modelos)
+```{r , echo=FALSE}
+plot(auc,xaxt="n",ann=FALSE,type="b", col="blue")
+axis(1,at=1:length(nameVector),labels=nameVector, las = 2)
+axis(2,labels=FALSE)
+aucArrStr<-strtrim(as.character(auc), 6) 
+text(auc, aucArrStr, labels=auc, cex= 0.7, pos=1)
+```
 
 ### Comparación de modelos usando la precisión.
 
@@ -1045,18 +1099,29 @@ lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color a
 nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","RLog_Comp","RLog_13")
 dfConfMatArray <- list(confusionMatrixNET,confusionMatrixNET2,confusionMatrixGBOOST,confusionMatrixGBM,confusionMatrixAdaBoost,confusionMatrixRF,confusionMatrixNaive,confusionMatrixLOG,confusionMatrixLOG2) 
 accuracyArr<-c()
-kappa<-c()
+kappaArr<-c()
 for (i in 1:length(dfConfMatArray)){
   accuracy<-as.numeric(dfConfMatArray[[i]]$overall[1])
+  kappa<-as.numeric(dfConfMatArray[[i]]$overall[2])
   accuracyArr<-c(accuracyArr, accuracy)
+  kappaArr<-c(kappaArr, kappa)
 }
+
+#Accuracy
 plot(accuracyArr,xaxt="n",ann=FALSE,type="b", col="blue")
 axis(1,at=1:length(nameVectorConf),labels=nameVectorConf, las = 2)
 axis(2,labels=FALSE)
 accuracyArrStr<-strtrim(as.character(accuracyArr), 6) 
 text(accuracyArr, accuracyArrStr, labels=accuracyArr, cex= 0.7, pos=1)
 ```
-
+```{r , echo=FALSE}
+#Kappa
+plot(kappaArr,xaxt="n",ann=FALSE,type="b", col="blue")
+axis(1,at=1:length(nameVectorConf),labels=nameVectorConf, las = 2)
+axis(2,labels=FALSE)
+accuracyArrStr<-strtrim(as.character(kappaArr), 6) 
+text(kappaArr, accuracyArrStr, labels=kappaArr, cex= 0.7, pos=1)
+```
 * Como se puede observar en el grafico anterior, usando XGBoost se alcanza respecto al resto de los modelos. Esto significa que es capaz de precedir y de obtener el mayor numero de verdaderos negativos (TN) y verdaderos positivos (TN).
 
 
