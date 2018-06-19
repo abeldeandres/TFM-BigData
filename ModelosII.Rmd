@@ -96,7 +96,7 @@ test <- final[!ind,]
 set.seed(42)
 ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
-model.LR <- train(outcome~.,data = train, method="glm", family="binomial",
+model.LR <- caret::train(outcome~.,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
 summary(model.LR)
 ```
@@ -105,7 +105,7 @@ summary(model.LR)
 
 ```{r , echo=FALSE}
 pred.LR = predict(model.LR, newdata=test)
-confusionMatrixLOG<-confusionMatrix(data = pred.LR, reference = test$outcome,positive="F")
+confusionMatrixLOG<-caret::confusionMatrix(data = pred.LR, reference = test$outcome,positive="F")
 confusionMatrixLOG
 ```
 
@@ -159,14 +159,14 @@ plot.roc(test$outcome, pred.LR$F,
 set.seed(42)
 ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
-model.LR1 <- train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="glm", family="binomial",trControl = ctrl, tuneLength = 5,metric="ROC")
+model.LR1 <- caret::train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="glm", family="binomial",trControl = ctrl, tuneLength = 5,metric="ROC")
 summary(model.LR1)
 ```
 
 * Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
 ```{r , echo=FALSE}
 pred.LR1 = predict(model.LR1, newdata=test)
-confusionMatrixLOG2<-confusionMatrix(data = pred.LR1, reference = test$outcome,positive="F")
+confusionMatrixLOG2<-caret::confusionMatrix(data = pred.LR1, reference = test$outcome,positive="F")
 confusionMatrixLOG2
 
 ```
@@ -240,7 +240,7 @@ nnetGrid <-  expand.grid(
 
 trainControl <- trainControl(method="cv", number=10)
 metric <- "Accuracy"
-model.nb <- train(outcome~., data=train, method="nb", 
+model.nb <- caret::train(outcome~., data=train, method="nb", 
                   trControl=trainControl,metric=metric,tuneGrid = nnetGrid
                   )
 ```
@@ -261,7 +261,7 @@ plot(model.nb)
 
 ```{r , echo=FALSE, include=FALSE}
 pred.NB<-predict(model.nb,test)
-confusionMatrixNaive<-confusionMatrix(data = pred.NB, reference = test$outcome,positive="F")
+confusionMatrixNaive<-caret::confusionMatrix(data = pred.NB, reference = test$outcome,positive="F")
 
 ```
 
@@ -358,7 +358,7 @@ print(model.RF)
 
 ```{r , echo=FALSE}
 predRF <- predict(model.RF2, newdata = test)
-confusionMatrixRF<-confusionMatrix(data=predRF,reference=test$outcome,positive="F")
+confusionMatrixRF<-caret::confusionMatrix(data=predRF,reference=test$outcome,positive="F")
 confusionMatrixRF
 ```
 
@@ -416,7 +416,7 @@ plot.roc(test$outcome, pred.RF$V,
 set.seed(42)
 trainControl <- trainControl(method="cv", number=10)
 metric <- "Accuracy"
-model.ada1 <- train(outcome~., data=train, method="ada", 
+model.ada1 <- caret::train(outcome~., data=train, method="ada", 
                   trControl=trainControl,metric=metric)
 print(model.ada1)
 
@@ -458,7 +458,7 @@ plot(model.ada)
 
 ```{r , echo=FALSE}
 pred.ada=predict(model.ada,test)
-confusionMatrixAdaBoost<-confusionMatrix(data=pred.ada,reference=test$outcome,positive="F")
+confusionMatrixAdaBoost<-caret::confusionMatrix(data=pred.ada,reference=test$outcome,positive="F")
 confusionMatrixAdaBoost
 ```
 
@@ -538,7 +538,7 @@ set.seed(42)
 fitControl = trainControl(method="cv", number=10)
 metric <- "Accuracy"
 
-modelGBM = train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F )
+modelGBM = caret::train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F )
 
 print(modelGBM)
 ```
@@ -572,7 +572,7 @@ plot(modelGBM)
 ```{r , echo=FALSE}
 pred.GBM = predict(modelGBM, test, na.action = na.pass)
 
-confusionMatrixGBM<-confusionMatrix(data=pred.GBM,reference=test$outcome,positive="F")
+confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM,reference=test$outcome,positive="F")
 confusionMatrixGBM
 ```
 ```{r , echo=FALSE}
@@ -653,7 +653,7 @@ ControlParamteres <- trainControl(method = "cv",
                             min_child_weight=2,
                             subsample = 1
                             )
- modelxgboost <- train(outcome~., 
+ modelxgboost <- caret::train(outcome~., 
                   data = train,
                   method = "xgbTree",
                   trControl = ControlParamteres,
@@ -667,7 +667,7 @@ ControlParamteres <- trainControl(method = "cv",
 pred.XGB<-predict(modelxgboost,test)
 #out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
 #levels(out_predGBOOST)=c("F","V")
-confusionMatrixGBOOST<-confusionMatrix(data = pred.XGB, reference = test$outcome,positive="F")
+confusionMatrixGBOOST<-caret::confusionMatrix(data = pred.XGB, reference = test$outcome,positive="F")
 confusionMatrixGBOOST
 ```
 
@@ -801,7 +801,7 @@ elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
   t(apply(out, 1, function(x) x/sum(x)))
 }
 
-model.nn <- train(outcome ~ ., 
+model.nn <- caret::train(outcome ~ ., 
                  data = trainNorm,
                  method = elm_fun,
                  trControl = fitControl,
@@ -819,7 +819,7 @@ plot(model.nn)
 ```{r , echo=FALSE}
 pred.NN1 <-predict(model.nn, testNorm)
 
-confusionMatrixNET<-confusionMatrix(data=pred.NN1,reference=testNorm$outcome,positive="F")
+confusionMatrixNET<-caret::confusionMatrix(data=pred.NN1,reference=testNorm$outcome,positive="F")
 confusionMatrixNET
 ```
 
@@ -882,7 +882,7 @@ elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
   t(apply(out, 1, function(x) x/sum(x)))
 }
 
-model.nn2 <- train(outcome ~ ., 
+model.nn2 <- caret::train(outcome ~ ., 
                  data = trainNormCor,
                  method = elm_fun,
                  trControl = fitControl,
@@ -900,7 +900,7 @@ plot(model.nn2)
 ```{r , echo=FALSE}
 pred.NN2 <-predict(model.nn2, testNormCor)
 
-confusionMatrixNET2<-confusionMatrix(data=pred.NN2,reference=testNormCor$outcome,positive="F")
+confusionMatrixNET2<-caret::confusionMatrix(data=pred.NN2,reference=testNormCor$outcome,positive="F")
 confusionMatrixNET2
 ```
 
@@ -950,36 +950,36 @@ plot.roc(testNormCor$outcome, pred.NN2$F,
 ```{r , echo=FALSE, include=FALSE}
 ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
-mod_fit_Complete <- train(outcome ~ .,data = train, method="glm", family="binomial",
+mod_fit_Complete <- caret::train(outcome ~ .,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_1<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause+pupils+sex,data = train, method="glm", family="binomial",
+mod_fit_1<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause+pupils+sex,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
 
-mod_fit_2<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause+pupils,data = train, method="glm", family="binomial",
+mod_fit_2<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause+pupils,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_3<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause,data = train, method="glm", family="binomial",
+mod_fit_3<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah+cause,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_4<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah,data = train, method="glm", family="binomial",
+mod_fit_4<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls+sah,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_5<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls,data = train, method="glm", family="binomial",
+mod_fit_5<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt+mdls,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_6<- train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt,data = train, method="glm", family="binomial",
+mod_fit_6<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye+oblt,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_7<- train(outcome ~ age+ec+verbal+hmt+motor+eye,data = train, method="glm", family="binomial",
+mod_fit_7<- caret::train(outcome ~ age+ec+verbal+hmt+motor+eye,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_8<- train(outcome ~ age+ec+verbal+hmt+motor,data = train, method="glm", family="binomial",
+mod_fit_8<- caret::train(outcome ~ age+ec+verbal+hmt+motor,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_9<- train(outcome ~ age+ec+verbal+hmt,data = train, method="glm", family="binomial",
+mod_fit_9<- caret::train(outcome ~ age+ec+verbal+hmt,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_10<- train(outcome ~ age+ec+verbal,data = train, method="glm", family="binomial",
+mod_fit_10<- caret::train(outcome ~ age+ec+verbal,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_11<- train(outcome ~ age+ec,data = train, method="glm", family="binomial",
+mod_fit_11<- caret::train(outcome ~ age+ec,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-mod_fit_12<- train(outcome ~ age,data = train, method="glm", family="binomial",
+mod_fit_12<- caret::train(outcome ~ age,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-dfarray <- list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_12) 
+dfarray <- caret::list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_12) 
 
-dfPredictArray<-list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF,pred.NB,pred.LR1)
+dfPredictArray<-caret::list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF,pred.NB,pred.LR1)
 
 for (i in dfarray){
   predIter<-predict(i,test,type="prob")
@@ -1088,7 +1088,7 @@ legend(x= "right", y="bottom", legend=nameVector2,
 plot(auc,xaxt="n",ann=FALSE,type="b", col="blue")
 axis(1,at=1:length(nameVector),labels=nameVector, las = 2)
 axis(2,labels=FALSE)
-aucArrStr<-strtrim(as.character(auc), 6) 
+aucArrStr<-strtrim(as.character(auc), 5) 
 text(auc, aucArrStr, labels=auc, cex= 0.7, pos=1)
 ```
 
@@ -1124,4 +1124,47 @@ text(kappaArr, accuracyArrStr, labels=kappaArr, cex= 0.7, pos=1)
 ```
 * Como se puede observar en el grafico anterior, usando XGBoost se alcanza respecto al resto de los modelos. Esto significa que es capaz de precedir y de obtener el mayor numero de verdaderos negativos (TN) y verdaderos positivos (TN).
 
+### Usando caretensemble
+```{r , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10,
+                             savePredictions=TRUE, classProbs=TRUE)
+algorithmList <- c("glm","nb","rf","ada","gbm","xgbTree", "blackboost","parRF","mlpWeightDecay","knn","earth","svmRadial","gam","glmnet")
+set.seed(42)
+models <- caretList(outcome~., data=train, trControl=trainControl, methodList=algorithmList)
+results <- resamples(models)
+summary(results)
+```
 
+```{r , echo=FALSE}
+dotplot(results)
+```
+
+```{r , echo=FALSE}
+set.seed(42)
+greedy_ensemble <- caretEnsemble(
+  models,
+  trControl=trainControl
+  )
+summary(greedy_ensemble)
+```
+
+```{r , echo=FALSE}
+set.seed(42)
+model_preds <- lapply(models, predict, newdata=test, type="prob")
+model_preds <- lapply(model_preds, function(x) x[,"F"])
+model_preds <- data.frame(model_preds)
+ens_preds <- predict(greedy_ensemble, newdata=test, type="prob")
+model_preds$ensemble <- ens_preds
+caTools::colAUC(model_preds, test$outcome)
+```
+
+```{r , echo=FALSE}
+varImp(greedy_ensemble)
+```
+
+```{r , echo=FALSE}
+set.seed(42)
+stack.glm <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl)
+print(stack.glm)
+```
