@@ -14,6 +14,7 @@ options(Encoding="UTF-8")
 ```{r , echo=FALSE, include=FALSE}
 library(caTools)
 library(caret)
+library(caretEnsemble)
 library(e1071)
 library(randomForest)
 library(nnet)
@@ -29,12 +30,12 @@ library(pROC)
 library(ROCR) 
 library(mlbench)
 library(elmNN) #Redes neuronales
-
+gc(reset=TRUE)
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
 
-
+arrayTiempos<-c()
 ```
 ## TERMINOS GENERALES
 ### Matriz de confusión
@@ -96,8 +97,9 @@ test <- final[!ind,]
 set.seed(42)
 ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
-model.LR <- caret::train(outcome~.,data = train, method="glm", family="binomial",
-                 trControl = ctrl, tuneLength = 5,metric="ROC")
+time <- system.time(model.LR <- caret::train(outcome~.,data = train, method="glm", family="binomial",
+                 trControl = ctrl, tuneLength = 5,metric="ROC"))
+arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
 summary(model.LR)
 ```
 
@@ -240,9 +242,10 @@ nnetGrid <-  expand.grid(
 
 trainControl <- trainControl(method="cv", number=10)
 metric <- "Accuracy"
-model.nb <- caret::train(outcome~., data=train, method="nb", 
+time<-system.time(model.nb <- caret::train(outcome~., data=train, method="nb", 
                   trControl=trainControl,metric=metric,tuneGrid = nnetGrid
-                  )
+                  ))
+arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
 ```
 
 ```{r , echo=FALSE}
@@ -350,7 +353,8 @@ print(best.m)
 ```
 * Una vez obtenido el optimo valor de mtry, vamos a volver a construir el modelo con el mtry optimo.
 ```{r , echo=FALSE}
-model.RF2=randomForest(outcome~.,data=train,importance=T,ntree=500, mtry=best.m)
+time<-system.time(model.RF2<-randomForest(outcome~.,data=train,importance=T,ntree=500, mtry=best.m))
+arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
 print(model.RF)
 ```
 
@@ -445,8 +449,8 @@ plot(model.ada1)
 
 ```{r , echo=FALSE}
 set.seed(42)
-model.ada<-ada(outcome~.,data=train,iter=141,nu=0.3,control=rpart.control(maxdepth=1))
-
+time<-system.time(model.ada<-ada(outcome~.,data=train,iter=141,nu=0.3,control=rpart.control(maxdepth=1)))
+arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
 print(model.ada)
 ```
 
@@ -538,8 +542,8 @@ set.seed(42)
 fitControl = trainControl(method="cv", number=10)
 metric <- "Accuracy"
 
-modelGBM = caret::train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F )
-
+time<-system.time(modelGBM <- caret::train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F ))
+arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
 print(modelGBM)
 ```
 
@@ -653,11 +657,12 @@ ControlParamteres <- trainControl(method = "cv",
                             min_child_weight=2,
                             subsample = 1
                             )
- modelxgboost <- caret::train(outcome~., 
+time<-system.time( modelxgboost <- caret::train(outcome~., 
                   data = train,
                   method = "xgbTree",
                   trControl = ControlParamteres,
-                  tuneGrid=parametersGrid)
+                  tuneGrid=parametersGrid))
+ arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
  modelxgboost
 ```
 
@@ -801,12 +806,13 @@ elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
   t(apply(out, 1, function(x) x/sum(x)))
 }
 
-model.nn <- caret::train(outcome ~ ., 
+time<-system.time(model.nn <- caret::train(outcome ~ ., 
                  data = trainNorm,
                  method = elm_fun,
                  trControl = fitControl,
                  tuneGrid = nnetGrid
-                 )
+                 ))
+arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
 model.nn
 ```
 
@@ -977,9 +983,9 @@ mod_fit_11<- caret::train(outcome ~ age+ec,data = train, method="glm", family="b
                  trControl = ctrl, tuneLength = 5,metric="ROC")
 mod_fit_12<- caret::train(outcome ~ age,data = train, method="glm", family="binomial",
                  trControl = ctrl, tuneLength = 5,metric="ROC")
-dfarray <- caret::list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_12) 
+dfarray <- list(mod_fit_Complete,mod_fit_1,mod_fit_2,mod_fit_3,mod_fit_4,mod_fit_5,mod_fit_6,mod_fit_7,mod_fit_8,mod_fit_9,mod_fit_10,mod_fit_11,mod_fit_12) 
 
-dfPredictArray<-caret::list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF,pred.NB,pred.LR1)
+dfPredictArray<-list(pred.NN1,pred.NN2,pred.XGB,pred.GBM,pred.ada,pred.RF,pred.NB,pred.LR1)
 
 for (i in dfarray){
   predIter<-predict(i,test,type="prob")
@@ -1124,14 +1130,35 @@ text(kappaArr, accuracyArrStr, labels=kappaArr, cex= 0.7, pos=1)
 ```
 * Como se puede observar en el grafico anterior, usando XGBoost se alcanza respecto al resto de los modelos. Esto significa que es capaz de precedir y de obtener el mayor numero de verdaderos negativos (TN) y verdaderos positivos (TN).
 
-### Usando caretensemble
+### Comparativas de tiempo
 ```{r , echo=FALSE}
+nameVectorTime<-c("GLM","NB","RF","Adaboost","GBM","XGBoost","R.Neuronal")
+plot(arrayTiempos,xaxt="n",ann=FALSE,type="b", col="blue")
+axis(1,at=1:length(nameVectorTime),labels=nameVectorTime, las = 2)
+axis(2,labels=FALSE)
+TimeArrStr<-strtrim(as.character(arrayTiempos), 6) 
+text(arrayTiempos, TimeArrStr, labels=arrayTiempos, cex= 0.7, pos=1)
+```
+
+### Usando caretensemble
+```{r warning=FALSE, , echo=FALSE}
 set.seed(42)
 trainControl <- trainControl(method="cv", number=10,
                              savePredictions=TRUE, classProbs=TRUE)
-algorithmList <- c("glm","nb","rf","ada","gbm","xgbTree", "blackboost","parRF","mlpWeightDecay","knn","earth","svmRadial","gam","glmnet")
+
+tunelist<- list(
+    glm=caretModelSpec(method="glm", tuneLength=2),
+    nb=caretModelSpec(method="nb", tuneGrid=data.frame(.fL=0,.usekernel=FALSE,.adjust=0)),
+   rf=caretModelSpec(method="rf", tuneGrid=data.frame(.mtry=2)),
+    ada=caretModelSpec(method="ada", tuneGrid=data.frame(.iter=150,.maxdepth=3,.nu=0.1)),
+    gbm=caretModelSpec(method="gbm",tuneGrid=data.frame(.n.trees=100,.interaction.depth = 1,.shrinkage = 0.1,.n.minobsinnode=10)),
+    xgbTree=caretModelSpec(method="xgbTree", tuneGrid=data.frame(.nrounds = 100,.max_depth = 3,.eta = 0.1,.gamma = 1,.colsample_bytree
+ = 0.7,.min_child_weight = 2,.subsample = 1)) 
+  )
+
+algorithmList <- c("glm","nb","rf","ada","gbm","xgbTree", "blackboost","parRF","knn","glmnet")
 set.seed(42)
-models <- caretList(outcome~., data=train, trControl=trainControl, methodList=algorithmList)
+models <- caretEnsemble::caretList(outcome~., data=train, trControl=trainControl,methodList=algorithmList)
 results <- resamples(models)
 summary(results)
 ```
@@ -1142,14 +1169,16 @@ dotplot(results)
 
 ```{r , echo=FALSE}
 set.seed(42)
+trainControl <- trainControl(method="cv", number=10)
+
 greedy_ensemble <- caretEnsemble(
   models,
   trControl=trainControl
   )
-summary(greedy_ensemble)
+#summary(greedy_ensemble)
 ```
 
-```{r , echo=FALSE}
+```{r warning=FALSE, , echo=FALSE}
 set.seed(42)
 model_preds <- lapply(models, predict, newdata=test, type="prob")
 model_preds <- lapply(model_preds, function(x) x[,"F"])
@@ -1160,11 +1189,17 @@ caTools::colAUC(model_preds, test$outcome)
 ```
 
 ```{r , echo=FALSE}
-varImp(greedy_ensemble)
+gbmImp  <-varImp(greedy_ensemble)
+gbmImp 
 ```
 
-```{r , echo=FALSE}
+```{r warning=FALSE, , echo=FALSE}
 set.seed(42)
 stack.glm <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl)
+print(stack.glm)
+```
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+stack.glm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
 print(stack.glm)
 ```
