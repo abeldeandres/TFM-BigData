@@ -35,7 +35,8 @@ rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
 
-arrayTiempos<-c()
+arrayTiemposTrain<-c()
+arrayTiemposPredict<-c()
 ```
 ## TERMINOS GENERALES
 ### Matriz de confusión
@@ -93,20 +94,20 @@ test <- final[!ind,]
 
 ### Usando todos los predictores
 * En primer lugar vamos a construir nuestro modelo de regresion logistica con los datos de entrenamiento.
-```{r , echo=FALSE}
+```{r echo=TRUE, , echo=FALSE}
 set.seed(42)
 ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
-time <- system.time(model.LR <- caret::train(outcome~.,data = train, method="glm", family="binomial",
-                 trControl = ctrl, tuneLength = 5,metric="ROC"))
-arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
+time <- system.time(model.LR <- caret::train(outcome~.,data = train, method="glm", family="binomial",trControl = ctrl, tuneLength = 5,metric="ROC"))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
 summary(model.LR)
 ```
 
 * Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
 
 ```{r , echo=FALSE}
-pred.LR = predict(model.LR, newdata=test)
+timePred<-system.time(pred.LR <- predict(model.LR, newdata=test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixLOG<-caret::confusionMatrix(data = pred.LR, reference = test$outcome,positive="F")
 confusionMatrixLOG
 ```
@@ -163,6 +164,9 @@ ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classPro
 summaryFunction=twoClassSummary)
 model.LR1 <- caret::train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="glm", family="binomial",trControl = ctrl, tuneLength = 5,metric="ROC")
 summary(model.LR1)
+```
+```{r , echo=FALSE}
+model.LR1
 ```
 
 * Una vez hecho esto, vamos a utilizar los datos de test para predecir el modelo que hemos construido y comprobaremos el ajuste de este.
@@ -235,17 +239,16 @@ plot.roc(test$outcome, pred.LR1$F,
 ```{r , echo=FALSE, include=FALSE}
 set.seed(42)
 nnetGrid <-  expand.grid(
-  usekernel = c(TRUE,FALSE),
-  fL = seq(from = 0, to = 2, by = 1),
-  adjust = seq(from = 0, to = 2, by = 1)
+  usekernel = FALSE, #c(TRUE,FALSE),
+  fL = 0, #seq(from = 0, to = 10, by = 1),
+  adjust = 0 #seq(from = 0, to = 10, by = 1)
 )
 
 trainControl <- trainControl(method="cv", number=10)
-metric <- "Accuracy"
 time<-system.time(model.nb <- caret::train(outcome~., data=train, method="nb", 
-                  trControl=trainControl,metric=metric,tuneGrid = nnetGrid
+                  trControl=trainControl,tuneGrid = nnetGrid
                   ))
-arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
 ```
 
 ```{r , echo=FALSE}
@@ -253,7 +256,7 @@ print(model.nb)
 ```
 
 ```{r , echo=FALSE}
-plot(model.nb)
+#plot(model.nb)
 ```
 * Con estas iteraciones se ha conseguido que para construir el mejor modelo, se necesitan los siguientes parametros: 
   + fL=0
@@ -262,8 +265,9 @@ plot(model.nb)
   
 * Una vez hecho esto, pasamos a predecir usando el modelo construido y los datos de test.
 
-```{r , echo=FALSE, include=FALSE}
-pred.NB<-predict(model.nb,test)
+```{r , echo=FALSE}
+timePred<-system.time(pred.NB<-predict(model.nb,test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixNaive<-caret::confusionMatrix(data = pred.NB, reference = test$outcome,positive="F")
 
 ```
@@ -312,6 +316,62 @@ plot.roc(test$outcome, pred.NB$V,
          max.auc.polygon = TRUE, 
          max.auc.polygon.col = "#00860022")
 ```
+### Eliminando los predictores "sex" y "cause""
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  usekernel = FALSE,
+  fL = 0,
+  adjust = 0
+)
+
+trainControl <- trainControl(method="cv", number=10)
+model.nb2 <- caret::train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="nb",trControl=trainControl,tuneGrid = nnetGrid)
+print(model.nb2)
+```
+
+```{r echo=TRUE, , echo=FALSE}
+pred.NB2<-predict(model.nb2,test)
+confusionMatrixNaive2<-caret::confusionMatrix(data = pred.NB2, reference = test$outcome,positive="F")
+confusionMatrixNaive2
+```
+
+* A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
+```{r echo=TRUE, warning=FALSE, , echo=FALSE}
+pred.NB2 <- predict(model.nb2, newdata = test, type="prob")
+pred.NB2<-data.frame(pred.NB)
+colnames(pred.NB2) <- c("F", "V")
+plot.roc(test$outcome, pred.NB2$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, pred.NB2$V,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
+
 ## RANDOM FOREST
 
 * Random forest es otra técnica de aprendizaje automático y nace como mejora sustancial de los árboles simples. Combina una cantidad grande de árboles de decisión independientes probados sobre conjuntos de datos aleatorios con igual distribución.
@@ -330,11 +390,7 @@ plot.roc(test$outcome, pred.NB$V,
 
 * El modelo de Random Forest tambien lo construiremos con los mismos datos de entrenamiento que utilizamos en la regresion logistica.
 
-```{r , echo=FALSE}
-set.seed(42)
-model.RF=randomForest(outcome~.,data=train,ntree=500)
-print(model.RF)
-```
+
 
 ```{r , echo=FALSE}
 mtry=tuneRF(x = train[,-14],       # data set de entrenamiento 
@@ -353,15 +409,25 @@ print(best.m)
 ```
 * Una vez obtenido el optimo valor de mtry, vamos a volver a construir el modelo con el mtry optimo.
 ```{r , echo=FALSE}
-time<-system.time(model.RF2<-randomForest(outcome~.,data=train,importance=T,ntree=500, mtry=best.m))
-arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
+#time<-system.time(model.RF2<-randomForest(outcome~.,data=train,importance=T,ntree=500, mtry=best.m))
+# train model
+control <- trainControl(method="cv", number=10)
+#tunegrid <- expand.grid(.mtry=c(1:15), .ntree=c(1:2500))
+tunegrid <-  expand.grid(
+  mtry = best.m
+)
+metric <- "Accuracy"
+time<-system.time(model.RF <- caret::train(outcome~., data=train, method="rf", metric=metric, tuneGrid=tunegrid, trControl=control))
+
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
 print(model.RF)
 ```
 
 * Despues de construir el modelo, vamos a utilizar los datos de test para predecirlo. Comprobaremos una vez mas el ajuste de este.
 
 ```{r , echo=FALSE}
-predRF <- predict(model.RF2, newdata = test)
+timePred<-system.time(predRF <- predict(model.RF, newdata = test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixRF<-caret::confusionMatrix(data=predRF,reference=test$outcome,positive="F")
 confusionMatrixRF
 ```
@@ -372,7 +438,7 @@ fourfoldplot(confusionMatrixRF$table)
 
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
 ```{r , echo=FALSE}
-pred.RF <- predict(model.RF2, newdata = test, type="prob")
+pred.RF <- predict(model.RF, newdata = test, type="prob")
 pred.RF<- data.frame(pred.RF)
 
 plot.roc(test$outcome, pred.RF$F,          # data
@@ -406,6 +472,63 @@ plot.roc(test$outcome, pred.RF$V,
          max.auc.polygon.col = "#00860022")
 ```
 
+### Eliminando los predictores "sex" y "cause""
+```{r , echo=FALSE}
+set.seed(42)
+control <- caret::trainControl(method="cv", number=10)
+tunegrid <-  expand.grid(
+  mtry = best.m
+)
+model.RF2 <- caret::train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train, method="rf", metric=metric, tuneGrid=tunegrid, trControl=control)
+
+
+print(model.RF2)
+```
+
+* Despues de construir el modelo, vamos a utilizar los datos de test para predecirlo. Comprobaremos una vez mas el ajuste de este.
+
+```{r , echo=FALSE}
+set.seed(42)
+pred.RF2 <- predict(model.RF2, newdata = test)
+confusionMatrixRF2<-caret::confusionMatrix(data=pred.RF2,reference=test$outcome,positive="F")
+confusionMatrixRF2
+```
+
+```{r , echo=FALSE}
+set.seed(42)
+pred.RF2 <- predict(model.RF2, newdata = test, type="prob")
+pred.RF2<- data.frame(pred.RF2)
+
+plot.roc(test$outcome, pred.RF2$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, pred.RF2$V,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
 
 ## Adaboost
 
@@ -449,8 +572,8 @@ plot(model.ada1)
 
 ```{r , echo=FALSE}
 set.seed(42)
-time<-system.time(model.ada<-ada(outcome~.,data=train,iter=141,nu=0.3,control=rpart.control(maxdepth=1)))
-arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
+time<-system.time(model.ada<-ada(outcome~.,data=train,iter=150,nu=0.1,control=rpart.control(maxdepth=3)))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
 print(model.ada)
 ```
 
@@ -461,7 +584,8 @@ plot(model.ada)
 * Despues de construir el modelo con los datos de entrenamiento y habiendo entrenado el modelo construido con los datos de prueba, obtenemos la matriz de confusion:
 
 ```{r , echo=FALSE}
-pred.ada=predict(model.ada,test)
+timePred<-system.time(pred.ada<-predict(model.ada,test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixAdaBoost<-caret::confusionMatrix(data=pred.ada,reference=test$outcome,positive="F")
 confusionMatrixAdaBoost
 ```
@@ -491,6 +615,60 @@ plot.roc(test$outcome, pred.ada$F,          # data
          main = "Partial AUC (pAUC)")
 
 plot.roc(test$outcome, pred.ada$V,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
+### Eliminando los predictores "sex" y "cause""
+```{r , echo=FALSE}
+set.seed(42)
+model.ada2<-ada(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt,data = train,iter=150,nu=0.1,control=rpart.control(maxdepth=3))
+print(model.ada2)
+```
+```{r , echo=FALSE}
+plot(model.ada2)
+```
+
+* Despues de construir el modelo con los datos de entrenamiento y habiendo entrenado el modelo construido con los datos de prueba, obtenemos la matriz de confusion:
+
+```{r , echo=FALSE}
+set.seed(42)
+pred.ada2=predict(model.ada2,test)
+confusionMatrixAdaBoost2<-caret::confusionMatrix(data=pred.ada2,reference=test$outcome,positive="F")
+confusionMatrixAdaBoost2
+```
+
+```{r , echo=FALSE}
+set.seed(42)
+pred.ada2 <- predict(model.ada2, newdata = test, type="prob")
+pred.ada2<-data.frame(pred.ada2)
+colnames(pred.ada2) <- c("F", "V")
+plot.roc(test$outcome, pred.ada2$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, pred.ada2$V,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -543,7 +721,7 @@ fitControl = trainControl(method="cv", number=10)
 metric <- "Accuracy"
 
 time<-system.time(modelGBM <- caret::train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F ))
-arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
 print(modelGBM)
 ```
 
@@ -574,8 +752,8 @@ plot(modelGBM)
 
 
 ```{r , echo=FALSE}
-pred.GBM = predict(modelGBM, test, na.action = na.pass)
-
+timePred<-system.time(pred.GBM <- predict(modelGBM, test, na.action = na.pass))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM,reference=test$outcome,positive="F")
 confusionMatrixGBM
 ```
@@ -583,9 +761,7 @@ confusionMatrixGBM
 fourfoldplot(confusionMatrixGBM$table)
 ```
 
-
 * A continuacion, vamos a utilizar la curva de ROC con los valores de pAUC:
-
 ```{r , echo=FALSE}
 pred.GBM = predict(modelGBM, test, type="prob")
 plot.roc(test$outcome,pred.GBM$F,          # data
@@ -603,6 +779,61 @@ plot.roc(test$outcome,pred.GBM$F,          # data
          main = "Partial AUC (pAUC)")
 
 plot.roc(test$outcome, pred.GBM$F,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
+
+### Eliminando los predictores "sex" y "cause"
+```{r , echo=FALSE}
+#https://rpubs.com/omicsdata/gbm
+set.seed(42)
+fitControl <- trainControl(method="cv", number=10)
+tunegrid <-  expand.grid(
+   n.trees = 100,
+   shrinkage = 0.1,
+   interaction.depth = 1,
+   n.minobsinnode = 10
+)
+model.GBM2 <- caret::train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt, data=train, method="gbm",trControl=fitControl, tuneGrid=tunegrid,verbose=F )
+print(model.GBM2)
+```
+* Predecimos
+```{r , echo=FALSE}
+pred.GBM2 <- predict(model.GBM2, test, na.action = na.pass)
+
+confusionMatrixGBM2<-caret::confusionMatrix(data=pred.GBM2,reference=test$outcome,positive="F")
+confusionMatrixGBM2
+```
+
+```{r echo=TRUE, , echo=FALSE}
+pred.GBM2 <- predict(model.GBM2, test, type="prob")
+plot.roc(test$outcome,pred.GBM2$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, pred.GBM2$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -642,19 +873,19 @@ plot.roc(test$outcome, pred.GBM$F,
     
 
 ```{r , echo=FALSE}
-
+set.seed(42)
 ControlParamteres <- trainControl(method = "cv",
                                   number = 10, #usamos 5 fold cross-validation
                                   savePredictions = TRUE,
                                   classProbs = TRUE #give the probabilities for each class.Not just the class labels
 )
 
- parametersGrid <-  expand.grid(eta = 0.1, 
-                            colsample_bytree=c(0.5,0.7),
-                            max_depth=c(3,6),
-                            nrounds=100,
+ parametersGrid <-  expand.grid(eta = 0.2, 
+                            colsample_bytree=0.4,
+                            max_depth=1,
+                            nrounds=71,
                             gamma=1,
-                            min_child_weight=2,
+                            min_child_weight=4,
                             subsample = 1
                             )
 time<-system.time( modelxgboost <- caret::train(outcome~., 
@@ -662,16 +893,15 @@ time<-system.time( modelxgboost <- caret::train(outcome~.,
                   method = "xgbTree",
                   trControl = ControlParamteres,
                   tuneGrid=parametersGrid))
- arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
+ arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
  modelxgboost
 ```
 
 * Ahora predecimos
 
 ```{r , echo=FALSE}
-pred.XGB<-predict(modelxgboost,test)
-#out_predGBOOST<-as.factor(ifelse(predictions > 0.5, 1, 0))
-#levels(out_predGBOOST)=c("F","V")
+timePred<-system.time(pred.XGB<-predict(modelxgboost,test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixGBOOST<-caret::confusionMatrix(data = pred.XGB, reference = test$outcome,positive="F")
 confusionMatrixGBOOST
 ```
@@ -697,6 +927,70 @@ plot.roc(test$outcome,pred.XGB$F,          # data
          main = "Partial AUC (pAUC)")
 
 plot.roc(test$outcome, pred.XGB$F,
+         percent = TRUE, 
+         add = TRUE, 
+         type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         print.auc = TRUE, 
+         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+```
+### Eliminando los predictores "sex" y "cause"
+```{r , echo=FALSE}
+set.seed(42)
+ControlParamteres <- trainControl(method = "cv",
+                                  number = 10, #usamos 5 fold cross-validation
+                                  savePredictions = TRUE,
+                                  classProbs = TRUE #give the probabilities for each class.Not just the class labels
+)
+
+ parametersGrid <-  expand.grid(eta = 0.2, 
+                            colsample_bytree=0.4,
+                            max_depth=1,
+                            nrounds=71,
+                            gamma=1,
+                            min_child_weight=4,
+                            subsample = 1
+                            )
+model.xgboost2 <- caret::train(outcome ~ age+ec+eye+motor+verbal+pupils+phm+sah+oblt+mdls+hmt, 
+                  data = train,
+                  method = "xgbTree",
+                  trControl = ControlParamteres,
+                  tuneGrid=parametersGrid)
+ model.xgboost2
+```
+* Ahora predecimos
+
+```{r , echo=FALSE}
+pred.XGB2<-predict(model.xgboost2,test)
+confusionMatrixGBOOST2<-caret::confusionMatrix(data = pred.XGB2, reference = test$outcome,positive="F")
+confusionMatrixGBOOST2
+```
+
+```{r , echo=FALSE}
+pred.XGB2<-predict(model.xgboost2,test,type="prob")
+plot.roc(test$outcome,pred.XGB2$F,          # data
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc=TRUE,                    
+         #display pAUC value on the plot with following options:
+         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUC (pAUC)")
+
+plot.roc(test$outcome, pred.XGB2$F,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -812,8 +1106,8 @@ time<-system.time(model.nn <- caret::train(outcome ~ .,
                  trControl = fitControl,
                  tuneGrid = nnetGrid
                  ))
-arrayTiempos<-c(arrayTiempos, as.numeric(time[3]))
-model.nn
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
+print(model.nn)
 ```
 
 
@@ -822,9 +1116,11 @@ plot(model.nn)
 ```
 * Como se puede observar en el grafico anterior, la funcion de activacion que nos proporciona una mayor precision es "purelin", que es una funcion de activacion puramente lineal.
 
-```{r , echo=FALSE}
-pred.NN1 <-predict(model.nn, testNorm)
 
+
+```{r , echo=FALSE}
+timePred<-system.time(pred.NN1 <-predict(model.nn, testNorm))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixNET<-caret::confusionMatrix(data=pred.NN1,reference=testNorm$outcome,positive="F")
 confusionMatrixNET
 ```
@@ -950,9 +1246,29 @@ plot.roc(testNormCor$outcome, pred.NN2$F,
 
 
 ## VALIDACION DE MODELOS
+### Graficamos todas las matrices de confusión
+```{r , echo=FALSE}
+par(mfrow=c(2,2))
+fourfoldplot(confusionMatrixLOG$table,main="R.Log")
+fourfoldplot(confusionMatrixLOG2$table,main="R.Log -sex y cause-")
+fourfoldplot(confusionMatrixNaive$table,main="Bayes Naïve")
+fourfoldplot(confusionMatrixNaive2$table,main="Bayes Naïve -sex y cause-")
+par(mfrow=c(2,2))
+fourfoldplot(confusionMatrixRF$table,main="R.Forest")
+fourfoldplot(confusionMatrixRF2$table,main="R.Forest -sex y cause-")
+fourfoldplot(confusionMatrixAdaBoost$table,main="Adaboost")
+fourfoldplot(confusionMatrixAdaBoost2$table,main="Adaboost -sex y cause-")
+par(mfrow=c(2,2))
+fourfoldplot(confusionMatrixGBM$table,main="GBM")
+fourfoldplot(confusionMatrixGBM2$table,main="GBM -sex y cause-")
+fourfoldplot(confusionMatrixGBOOST$table,main="XGB")
+fourfoldplot(confusionMatrixGBOOST2$table,main="XGB -sex y cause-")
+par(mfrow=c(2,2))
+fourfoldplot(confusionMatrixNET$table,main="Neural Network")
+fourfoldplot(confusionMatrixNET2$table,main="Neural Network-verbal-")
+```
 
 ### Comparación de modelos usando el AUCsp y AUCse
-
 ```{r , echo=FALSE, include=FALSE}
 ctrl <- trainControl(method = "cv", number = 10, savePredictions = TRUE,classProbs=TRUE,
 summaryFunction=twoClassSummary)
@@ -1089,13 +1405,144 @@ legend(x= "right", y="bottom", legend=nameVector2,
        col=color2, lty=1:2, cex=0.8,
        title="Modelos", text.font=4, bg='lightblue')
 ```
+####Comparacion con AUC de 5 modelos
+```{r , echo=FALSE}
+color3 <-colores[1:6]
+nameVector3<-c()
+nameVector3<-c(nameVector3, nameVector[9])
+nameVector3<-c(nameVector3, nameVector[17])
+nameVector3<-c(nameVector3, nameVector[18])
+nameVector3<-c(nameVector3, nameVector[19])
+nameVector3<-c(nameVector3, nameVector[20])
+nameVector3<-c(nameVector3, nameVector[21])
+vectorAEstudiar<-c(9,17,18,19,20,21)
+png(filename = "RplotROCComp3.png",
+    width = 600, height = 600,res = 130, units = "px", pointsize = 12,
+     bg = "white")
+for (i in 1:length(vectorAEstudiar)){
+  resRoc <- roc(test$outcome, dfPredictArray[[vectorAEstudiar[i]]]$F)
+  auc<-c(auc, as.numeric(resRoc$auc))
+  if( i==1){
+    plot(resRoc, col=color3[i])
+  }else{
+    plot(resRoc, col=color3[i],add=TRUE)
+  }
+  
+}
+legend(x= "right", y="bottom", legend=nameVector3,
+       col=color3, lty=1:2, cex=0.8,
+       title="Modelos", text.font=4, bg='lightblue')
+```
+
+####Comparacion con AUC de 5 modelos AUCsp
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
+color4 <-colores[1:6]
+nameVector4<-c()
+nameVector4<-c(nameVector4, nameVector[9])
+nameVector4<-c(nameVector4, nameVector[17])
+nameVector4<-c(nameVector4, nameVector[18])
+nameVector4<-c(nameVector4, nameVector[19])
+nameVector4<-c(nameVector4, nameVector[20])
+nameVector4<-c(nameVector4, nameVector[21])
+vectorAEstudiar<-c(9,17,18,19,20,21)
+png(filename = "RplotROCComp4.png",
+    width = 600, height = 600,res = 130, units = "px", pointsize = 12,
+     bg = "white")
+
+for (i in 1:length(vectorAEstudiar)){
+  if( i==1){
+     plot.roc(test$outcome,dfPredictArray[[vectorAEstudiar[i]]]$F,
+         percent = TRUE,                    # show all values in percent
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         col=color4[i],
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUCsp (pAUC)")
+  }else{
+     plot.roc(test$outcome,dfPredictArray[[vectorAEstudiar[i]]]$F,
+         percent = TRUE,                    # show all values in percent
+         add=TRUE,
+         col=color4[i],
+         partial.auc=c(100, 90), 
+         partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
+         print.auc.col = "#1c61b6",
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
+         main = "Partial AUCsp (pAUC)")
+  }
+
+}
+legend(x= "right", y="bottom", legend=nameVector4,
+       col=color4, lty=1:2, cex=0.8,
+       title="Modelos", text.font=4, bg='lightblue')
+```
+####Comparacion con AUC de 5 modelos AUCse
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
+color4 <-colores[1:6]
+nameVector4<-c()
+nameVector4<-c(nameVector4, nameVector[9])
+nameVector4<-c(nameVector4, nameVector[17])
+nameVector4<-c(nameVector4, nameVector[18])
+nameVector4<-c(nameVector4, nameVector[19])
+nameVector4<-c(nameVector4, nameVector[20])
+nameVector4<-c(nameVector4, nameVector[21])
+vectorAEstudiar<-c(9,17,18,19,20,21)
+png(filename = "RplotROCComp5.png",
+    width = 600, height = 600,res = 130, units = "px", pointsize = 12,
+     bg = "white")
+
+for (i in 1:length(vectorAEstudiar)){
+  if( i==1){
+     plot.roc(test$outcome,dfPredictArray[[vectorAEstudiar[i]]]$F,
+         percent = TRUE, 
+         #type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         col=color4[i],
+         print.auc = TRUE, 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+  }else{
+     plot.roc(test$outcome,dfPredictArray[[vectorAEstudiar[i]]]$F,
+         percent = TRUE, 
+         add=TRUE,
+         #type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
+         partial.auc = c(100, 90), 
+         partial.auc.correct = TRUE,
+         partial.auc.focus = "se",          # focus pAUC on the sensitivity
+         col=color4[i],
+         print.auc = TRUE, 
+         print.auc.col = "#008600",
+         print.auc.y = 40,                  # do not print auc over the previous one
+         auc.polygon = TRUE, 
+         auc.polygon.col = "#008600",
+         max.auc.polygon = TRUE, 
+         max.auc.polygon.col = "#00860022")
+  }
+
+}
+legend(x= "right", y="bottom", legend=nameVector4,
+       col=color4, lty=1:2, cex=0.8,
+       title="Modelos", text.font=4, bg='lightblue')
+```
 ####Comparacion con AUC de Regresion Logistica (sus modelos)
 ```{r , echo=FALSE}
-plot(auc,xaxt="n",ann=FALSE,type="b", col="blue")
-axis(1,at=1:length(nameVector),labels=nameVector, las = 2)
-axis(2,labels=FALSE)
-aucArrStr<-strtrim(as.character(auc), 5) 
-text(auc, aucArrStr, labels=auc, cex= 0.7, pos=1)
+#plot(auc,xaxt="n",ann=FALSE,type="b", col="blue")
+#axis(1,at=1:length(nameVector),labels=nameVector, las = 2)
+#axis(2,labels=FALSE)
+#aucArrStr<-strtrim(as.character(auc), 5) 
+#text(auc, aucArrStr, labels=auc, cex= 0.7, pos=1)
 ```
 
 ### Comparación de modelos usando la precisión.
@@ -1133,11 +1580,22 @@ text(kappaArr, accuracyArrStr, labels=kappaArr, cex= 0.7, pos=1)
 ### Comparativas de tiempo
 ```{r , echo=FALSE}
 nameVectorTime<-c("GLM","NB","RF","Adaboost","GBM","XGBoost","R.Neuronal")
-plot(arrayTiempos,xaxt="n",ann=FALSE,type="b", col="blue")
+#png(filename = "TimeCompare.png",
+#    width = 850, height = 850,res = 130, units = "px", pointsize = 12,
+#     bg = "white")
+plot(arrayTiemposTrain,xaxt="n",ann=FALSE,type="b", col="blue")
+par(new=TRUE)
+plot(arrayTiemposPredict,xaxt="n",yaxt='n',ann=FALSE,type="b", col="red")
 axis(1,at=1:length(nameVectorTime),labels=nameVectorTime, las = 2)
 axis(2,labels=FALSE)
-TimeArrStr<-strtrim(as.character(arrayTiempos), 6) 
-text(arrayTiempos, TimeArrStr, labels=arrayTiempos, cex= 0.7, pos=1)
+
+TimeArrStr<-strtrim(as.character(arrayTiemposTrain), 6) 
+text(arrayTiemposTrain, TimeArrStr, labels=arrayTiemposTrain, cex= 0.7, pos=3)
+legend(x= "center", y="bottom", # places a legend at the appropriate place 
+       c("Train","Predict"), # puts text in the legend 
+lty=c(1,1), # gives the legend appropriate symbols (lines)
+
+lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color and width
 ```
 
 ### Usando caretensemble
@@ -1166,6 +1624,21 @@ summary(results)
 ```{r , echo=FALSE}
 dotplot(results)
 ```
+
+
+```{r , echo=FALSE}
+correlation<-modelCor(resamples(models))
+correlation
+```
+```{r , echo=FALSE}
+corrplot.mixed(correlation) 
+```
+* Vemos que existen grandes correlaciones:
+* En primer lugar, existe una gran correlacion entre RF y parRF
+* Tambien existe una gran correlacion entre glm y glmnet
+* Existe tambien muchas correlaciones entre ada y glmnet
+* Existe tambien una gran correlacion entre ada y GBM
+* Existe tambien una gran correlacion entre ada y GLM
 
 ```{r , echo=FALSE}
 set.seed(42)
@@ -1200,6 +1673,107 @@ print(stack.glm)
 ```
 ```{r warning=FALSE, , echo=FALSE}
 set.seed(42)
-stack.glm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
+stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
+print(stack.gbm)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+plot(stack.gbm)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  n.trees = 50,
+  interaction.depth = 1,
+  shrinkage = 0.1,
+  n.minobsinnode = 10
+)
+stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl, tuneGrid=nnetGrid)
+print(stack.gbm)
+```
+
+```{r , echo=FALSE}
+pred.GBM.ensemble <- predict(stack.gbm, test, na.action = na.pass)
+confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM.ensemble,reference=test$outcome,positive="F")
+confusionMatrixGBM
+```
+* ELiminamos ada y glm
+
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10,classProbs=TRUE )
+
+algorithmList <- c("glm","nb","rf","gbm","xgbTree", "blackboost","knn")
+models <- caretEnsemble::caretList(outcome~., data=train, trControl=trainControl,methodList=algorithmList)
+results <- resamples(models)
+summary(results)
+```
+
+```{r , echo=FALSE}
+correlation<-modelCor(resamples(models))
+correlation
+```
+```{r , echo=FALSE}
+corrplot.mixed(correlation) 
+```
+
+```{r , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10)
+
+greedy_ensemble <- caretEnsemble(
+  models,
+  metric="Accuracy", 
+  trControl=trainControl
+  )
+#summary(greedy_ensemble)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+model_preds <- lapply(models, predict, newdata=test, type="prob")
+model_preds <- lapply(model_preds, function(x) x[,"F"])
+model_preds <- data.frame(model_preds)
+ens_preds <- predict(greedy_ensemble, newdata=test, type="prob")
+model_preds$ensemble <- ens_preds
+caTools::colAUC(model_preds, test$outcome)
+```
+
+```{r , echo=FALSE}
+gbmImp  <-varImp(greedy_ensemble)
+gbmImp 
+```
+
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+stack.glm <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl)
 print(stack.glm)
+```
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
+print(stack.gbm)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+plot(stack.gbm)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  n.trees = 50,
+  interaction.depth = 1,
+  shrinkage = 0.1,
+  n.minobsinnode = 10
+)
+stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl, tuneGrid=nnetGrid)
+print(stack.gbm)
+```
+
+```{r , echo=FALSE}
+pred.GBM.ensemble <- predict(stack.gbm, test)
+confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM.ensemble,reference=test$outcome)
+confusionMatrixGBM
 ```
