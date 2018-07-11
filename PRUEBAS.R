@@ -8,7 +8,7 @@ library(gbm)
 library(neuralnet)
 
 rm(list = ls())
-
+dev.off()
 set.seed(42)
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
 
@@ -43,10 +43,16 @@ library(pROC)
 
 resRoc1 <- roc(train$outcome, modelo.logit1$fitted)
 resRoc2 <- roc(train$outcome, modelo.logit2$fitted)
-plot(resRoc1, legacy.axes = TRUE,print.thres = "best")
-plot(resRoc2, add=TRUE, col='red',print.thres = "best")
+
+
+#plot(resRoc1, legacy.axes = TRUE,print.thres = "best")
+#plot(resRoc2, add=TRUE, col='red',print.thres = "best")
+
+#plot(resRoc2, col="red", print.auc=TRUE)
 #https://rpubs.com/Wangzf/pROC
-plot.roc(train$outcome, modelo.logit2$fitted,          # data
+
+
+test1<-plot.roc(train$outcome, modelo.logit2$fitted,          # data
          percent = TRUE,                    # show all values in percent
          partial.auc=c(100, 90), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
@@ -59,8 +65,7 @@ plot.roc(train$outcome, modelo.logit2$fitted,          # data
          max.auc.polygon = TRUE, 
          max.auc.polygon.col = "#1c61b622", # also show the 100% polygon
          main = "Partial AUC (pAUC)")
-
-plot.roc(train$outcome, modelo.logit2$fitted,
+test2<-plot.roc(train$outcome, modelo.logit2$fitted,
          percent = TRUE, 
          add = TRUE, 
          type = "n",                        # add to plot, but don't re-add the ROC itself (useless)
@@ -79,10 +84,11 @@ plot.roc(train$outcome, modelo.logit2$fitted,
 
 
 
+
 #http://blog.revolutionanalytics.com/2016/05/using-caret-to-compare-models.html
 
-ci.auc(resRoc1, conf.level=0.95)
-ci.auc(resRoc2, conf.level=0.95)
+ci1<-ci.auc(test2$auc, conf.level=0.95,method="delong")
+ci2<-ci.auc(test1$auc, conf.level=0.95,method="delong")
 
 
 
@@ -108,7 +114,7 @@ gbm.ROC <- roc(predictor=gbm.probs$F,
 
 plot.roc(test$outcome, gbm.probs$V,          # data
          percent = TRUE,                    # show all values in percent
-         partial.auc=c(100, 90), 
+         partial.auc=c(20, 60), 
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:

@@ -129,7 +129,7 @@ plot.roc(test$outcome, pred.LR$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -145,7 +145,7 @@ plot.roc(test$outcome, pred.LR$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -193,7 +193,7 @@ plot.roc(test$outcome, pred.LR1$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -209,7 +209,7 @@ plot.roc(test$outcome, pred.LR1$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -292,7 +292,7 @@ plot.roc(test$outcome, pred.NB$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -308,7 +308,7 @@ plot.roc(test$outcome, pred.NB$V,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -347,7 +347,7 @@ plot.roc(test$outcome, pred.NB2$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -363,7 +363,7 @@ plot.roc(test$outcome, pred.NB2$V,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -447,7 +447,7 @@ plot.roc(test$outcome, pred.RF$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -463,7 +463,7 @@ plot.roc(test$outcome, pred.RF$V,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -505,7 +505,7 @@ plot.roc(test$outcome, pred.RF2$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -521,7 +521,7 @@ plot.roc(test$outcome, pred.RF2$V,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -606,7 +606,7 @@ plot.roc(test$outcome, pred.ada$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -622,7 +622,7 @@ plot.roc(test$outcome, pred.ada$V,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -660,7 +660,7 @@ plot.roc(test$outcome, pred.ada2$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -676,7 +676,7 @@ plot.roc(test$outcome, pred.ada2$V,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -719,15 +719,17 @@ plot.roc(test$outcome, pred.ada2$V,
 set.seed(42)
 fitControl = trainControl(method="cv", number=10)
 metric <- "Accuracy"
-
-time<-system.time(modelGBM <- caret::train(outcome~., data=train, method="gbm",distribution="bernoulli",metric=metric, trControl=fitControl, verbose=F ))
+tunegrid <-  expand.grid(
+   n.trees = 100,
+   shrinkage = 0.1,
+   interaction.depth = 1,
+   n.minobsinnode = 10
+)
+time<-system.time(modelGBM <- caret::train(outcome~., data=train, method="gbm",trControl=fitControl, tuneGrid=tunegrid,verbose=F))
 arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
 print(modelGBM)
 ```
 
-```{r , echo=FALSE}
-plot(modelGBM)
-```
 
 * Vemos que al construir al construir el modelo automaticamente, se utilizan los siguientes valores:
   + n.trees = 100. Numero de iteraciones.
@@ -752,7 +754,7 @@ plot(modelGBM)
 
 
 ```{r , echo=FALSE}
-timePred<-system.time(pred.GBM <- predict(modelGBM, test, na.action = na.pass))
+timePred<-system.time(pred.GBM <- predict(modelGBM, test))
 arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
 confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM,reference=test$outcome,positive="F")
 confusionMatrixGBM
@@ -770,7 +772,7 @@ plot.roc(test$outcome,pred.GBM$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -786,7 +788,7 @@ plot.roc(test$outcome, pred.GBM$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -825,7 +827,7 @@ plot.roc(test$outcome,pred.GBM2$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -841,7 +843,7 @@ plot.roc(test$outcome, pred.GBM2$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -918,7 +920,7 @@ plot.roc(test$outcome,pred.XGB$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -934,7 +936,7 @@ plot.roc(test$outcome, pred.XGB$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -982,7 +984,7 @@ plot.roc(test$outcome,pred.XGB2$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -998,7 +1000,7 @@ plot.roc(test$outcome, pred.XGB2$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -1085,9 +1087,7 @@ highlyCorrelated
 ```{r , echo=FALSE, include=FALSE}
 set.seed(42)
 
-fitControl <- trainControl(method = "cv", number = 10, returnResamp = "all", search = "random",classProbs = TRUE,summaryFunction = twoClassSummary 
-                          
-                         )
+fitControl <- trainControl(method = "cv", number = 10, returnResamp = "all", search = "random",classProbs = TRUE,summaryFunction = twoClassSummary)
 
 nnetGrid <-  expand.grid(
   nhid = seq(from = 1, to = 50, by = 1),
@@ -1100,13 +1100,13 @@ elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
   t(apply(out, 1, function(x) x/sum(x)))
 }
 
-time<-system.time(model.nn <- caret::train(outcome ~ ., 
+model.nn <- caret::train(outcome ~ ., 
                  data = trainNorm,
                  method = elm_fun,
                  trControl = fitControl,
                  tuneGrid = nnetGrid
-                 ))
-arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
+                 )
+
 print(model.nn)
 ```
 
@@ -1116,7 +1116,26 @@ plot(model.nn)
 ```
 * Como se puede observar en el grafico anterior, la funcion de activacion que nos proporciona una mayor precision es "purelin", que es una funcion de activacion puramente lineal.
 
-
+```{r , echo=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  nhid = 14,
+  actfun= "purelin"
+)
+elm_fun <- getModelInfo("elm")[[1]]
+elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
+  out <- exp(predict(modelFit, newdata))
+  t(apply(out, 1, function(x) x/sum(x)))
+}
+time<-system.time(model.nn <- caret::train(outcome ~ ., 
+                 data = trainNorm,
+                 method = elm_fun,
+                 trControl = fitControl,
+                 tuneGrid = nnetGrid
+                 ))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
+print(model.nn)
+```
 
 ```{r , echo=FALSE}
 timePred<-system.time(pred.NN1 <-predict(model.nn, testNorm))
@@ -1136,7 +1155,7 @@ plot.roc(testNorm$outcome,pred.NN1$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -1152,7 +1171,7 @@ plot.roc(testNorm$outcome, pred.NN1$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -1163,7 +1182,7 @@ plot.roc(testNorm$outcome, pred.NN1$F,
 
 ### Eliminamos las variables mas correladas: Verbal
 
-```{r , echo=FALSE, include=FALSE}
+```{r echo=TRUE, , echo=FALSE}
 set.seed(42)
 trainNormCor <-trainNorm[,-7]
 testNormCor <-testNorm[,-7]
@@ -1172,12 +1191,10 @@ testNormCor <-testNorm[,-7]
 fitControl <- trainControl(method = "cv", number = 10, returnResamp = "all", search = "random",classProbs = TRUE,summaryFunction = twoClassSummary 
                           
                          )
-
 nnetGrid <-  expand.grid(
-  nhid = seq(from = 1, to = 50, by = 1),
-  actfun= c("sig","sin","radbas","hardlim","hardlims","satlins","tansig","tribas","poslin","purelin")
+  nhid = 14,
+  actfun= "purelin"
 )
-
 elm_fun <- getModelInfo("elm")[[1]]
 elm_fun$prob <- function (modelFit, newdata, submodels = NULL)  {
   out <- exp(predict(modelFit, newdata))
@@ -1190,13 +1207,10 @@ model.nn2 <- caret::train(outcome ~ .,
                  trControl = fitControl,
                  tuneGrid = nnetGrid
                  )
-model.nn2
-#print(model.nn)
+print(model.nn2)
 ```
 
-```{r , echo=FALSE}
-plot(model.nn2)
-```
+
 
 * Predecimos
 ```{r , echo=FALSE}
@@ -1219,7 +1233,7 @@ plot.roc(testNormCor$outcome,pred.NN2$F,          # data
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -1235,7 +1249,7 @@ plot.roc(testNormCor$outcome, pred.NN2$F,
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -1244,6 +1258,227 @@ plot.roc(testNormCor$outcome, pred.NN2$F,
          max.auc.polygon.col = "#00860022")
 ```
 
+### Usando caretensemble
+
+* Usando CaretList
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10,
+                             savePredictions=TRUE, classProbs=TRUE)
+
+tunelist<- list(
+    glm=caretModelSpec(method="glm", tuneLength=2),
+    nb=caretModelSpec(method="nb", tuneGrid=data.frame(.fL=0,.usekernel=FALSE,.adjust=0)),
+   rf=caretModelSpec(method="rf", tuneGrid=data.frame(.mtry=2)),
+    ada=caretModelSpec(method="ada", tuneGrid=data.frame(.iter=150,.maxdepth=3,.nu=0.1)),
+    gbm=caretModelSpec(method="gbm",tuneGrid=data.frame(.n.trees=100,.interaction.depth = 1,.shrinkage = 0.1,.n.minobsinnode=10)),
+    xgbTree=caretModelSpec(method="xgbTree", tuneGrid=data.frame(.nrounds = 100,.max_depth = 3,.eta = 0.1,.gamma = 1,.colsample_bytree
+ = 0.7,.min_child_weight = 2,.subsample = 1)) 
+)
+
+algorithmList <- c("glm","nb","rf","ada","gbm","xgbTree", "blackboost","parRF","knn","glmnet")
+set.seed(42)
+models <- caretEnsemble::caretList(outcome~., data=train, trControl=trainControl,methodList=algorithmList)
+results <- resamples(models)
+summary(results)
+```
+
+```{r , echo=FALSE}
+dotplot(results)
+```
+
+```{r , echo=FALSE}
+splom(results)
+```
+
+```{r , echo=FALSE}
+correlation<-modelCor(resamples(models))
+correlation
+```
+
+```{r , echo=FALSE}
+corrplot.mixed(correlation) 
+```
+* Vemos que existen grandes correlaciones:
+* En primer lugar, existe una gran correlacion entre RF y parRF
+* Tambien existe una gran correlacion entre glm y glmnet
+* Existe tambien muchas correlaciones entre ada y glmnet
+* Existe tambien una gran correlacion entre ada y GBM
+* Existe tambien una gran correlacion entre ada y GLM
+
+* Ahora usamos caretensemble
+```{r , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10, savePredictions=TRUE, classProbs=TRUE)
+
+CE_TRAIN_COMPLETO <- caretEnsemble(
+  models,
+  metric="Accuracy",
+  trControl=trainControl
+  )
+summary(CE_TRAIN_COMPLETO)
+```
+
+* Predecimos CaretEnsemble
+```{r , echo=FALSE}
+CE_PREDICT_COMPLETO <- predict(CE_TRAIN_COMPLETO, newdata=test)
+matriz_Confusion_CE_Completo<-confusionMatrix(data=CE_PREDICT_COMPLETO, reference=test$outcome)
+print(matriz_Confusion_CE_Completo)
+```
+
+
+
+* Obtenemos las variables mas importantes usando CaretEnsemble
+```{r , echo=FALSE}
+var_imp_CE_Completo  <-varImp(CE_TRAIN_COMPLETO)
+print(var_imp_CE_Completo) 
+```
+
+* Utilizamos careStack con GLM (COMPLETO)
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+time<-system.time(stack.glm.completo <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
+print(stack.glm.completo)
+```
+
+```{r , echo=FALSE}
+timePred<-system.time(pred.GLM.ensemble <- predict(stack.glm.completo, test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
+confusionMatrixGLM.ensemble.completo<-caret::confusionMatrix(data=pred.GLM.ensemble,reference=test$outcome)
+confusionMatrixGLM.ensemble.completo
+```
+
+* Utilizamos caretStack con GBM (COMPLETO)
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+stack.gbm.completo <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
+print(stack.gbm.completo)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+plot(stack.gbm.completo)
+```
+
+* Utilizamos caretStack con GBM y TUNING (COMPLETO)
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  n.trees = 50,
+  interaction.depth = 1,
+  shrinkage = 0.1,
+  n.minobsinnode = 10
+)
+time<-system.time(stack.gbm.completo <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl, tuneGrid=nnetGrid))
+arrayTiemposTrain<-c(arrayTiemposTrain, as.numeric(time[3]))
+print(stack.gbm.completo)
+```
+
+```{r , echo=FALSE}
+timePred<-system.time(pred.GBM.ensemble.completo <- predict(stack.gbm.completo, test))
+arrayTiemposPredict<-c(arrayTiemposPredict, as.numeric(timePred[3]))
+confusionMatrixGBM.ensemble.completo<-caret::confusionMatrix(data=pred.GBM.ensemble.completo,reference=test$outcome)
+confusionMatrixGBM.ensemble.completo
+```
+
+* ELiminamos ada, glm y rf
+
+* Utilizamos caretList 
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10, savePredictions=TRUE, classProbs=TRUE)
+
+algorithmList <- c("glm","nb","rf","gbm","xgbTree", "blackboost","knn")
+models <- caretEnsemble::caretList(outcome~., data=train, trControl=trainControl,methodList=algorithmList)
+results <- resamples(models)
+summary(results)
+```
+
+```{r , echo=FALSE}
+dotplot(results)
+```
+
+```{r , echo=FALSE}
+splom(results)
+```
+
+* Vemos la correlacion
+```{r , echo=FALSE}
+correlation<-modelCor(resamples(models))
+correlation
+```
+
+```{r , echo=FALSE}
+corrplot.mixed(correlation) 
+```
+
+*Utilizamos CaretEnsemble
+```{r , echo=FALSE}
+set.seed(42)
+trainControl <- trainControl(method="cv", number=10, savePredictions=TRUE, classProbs=TRUE)
+
+CE_TRAIN <- caretEnsemble(
+  models,
+  metric="Accuracy", 
+  trControl=trainControl
+  )
+summary(CE_TRAIN)
+```
+
+* Predecimos
+```{r , echo=FALSE}
+pred <- predict(CE_TRAIN, newdata=test)
+conf<-caret::confusionMatrix(data=pred, reference=test$outcome)
+conf 
+```
+
+*Obtenemos las variables importantes del caretensemble
+```{r , echo=FALSE}
+gbmImp  <-varImp(CE_TRAIN)
+print(gbmImp) 
+```
+
+* Utilizamos caretStack con GLM
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+stack.glm <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl)
+print(stack.glm)
+```
+
+```{r , echo=FALSE}
+pred.GLM.ensemble <- predict(stack.glm, test)
+confusionMatrixGLM.ensemble<-caret::confusionMatrix(data=pred.GLM.ensemble,reference=test$outcome)
+confusionMatrixGLM.ensemble
+```
+
+* Utilizamos caretStack con GBM
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
+print(stack.gbm)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+plot(stack.gbm)
+```
+
+```{r warning=FALSE, , echo=FALSE}
+set.seed(42)
+nnetGrid <-  expand.grid(
+  n.trees = 50,
+  interaction.depth = 1,
+  shrinkage = 0.1,
+  n.minobsinnode = 10
+)
+stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl, tuneGrid=nnetGrid)
+print(stack.gbm)
+```
+
+```{r , echo=FALSE}
+pred.GBM.ensemble <- predict(stack.gbm, test)
+confusionMatrixGBM.ensemble<-caret::confusionMatrix(data=pred.GBM.ensemble,reference=test$outcome)
+confusionMatrixGBM.ensemble
+```
 
 ## VALIDACION DE MODELOS
 ### Graficamos todas las matrices de confusión
@@ -1266,6 +1501,11 @@ fourfoldplot(confusionMatrixGBOOST2$table,main="XGB -sex y cause-")
 par(mfrow=c(2,2))
 fourfoldplot(confusionMatrixNET$table,main="Neural Network")
 fourfoldplot(confusionMatrixNET2$table,main="Neural Network-verbal-")
+fourfoldplot(confusionMatrixGLM.ensemble.completo$table,main="GLM Ens.Comp")
+fourfoldplot(confusionMatrixGBM.ensemble.completo$table,main="GBM Ens.Comp")
+par(mfrow=c(2,2))
+fourfoldplot(confusionMatrixGLM.ensemble$table,main="GLM Ens.Parc")
+fourfoldplot(confusionMatrixGBM.ensemble$table,main="GBM Ens.Parc")
 ```
 
 ### Comparación de modelos usando el AUCsp y AUCse
@@ -1319,7 +1559,7 @@ for (i in 1:length(dfPredictArray)){
          partial.auc.correct=TRUE,          # define a partial AUC (pAUC)
          print.auc=TRUE,                    
          #display pAUC value on the plot with following options:
-         print.auc.pattern = "Corrected pAUC (100-90%% SP):\n%.1f%%",
+         print.auc.pattern = "pAUC (100-90%% SP):\n%.1f%%",
          print.auc.col = "#1c61b6",
          auc.polygon = TRUE, 
          auc.polygon.col = "#1c61b6",       # show pAUC as a polygon
@@ -1334,7 +1574,7 @@ for (i in 1:length(dfPredictArray)){
          partial.auc.correct = TRUE,
          partial.auc.focus = "se",          # focus pAUC on the sensitivity
          print.auc = TRUE, 
-         print.auc.pattern = "Corrected pAUC (100-90%% SE):\n%.1f%%", 
+         print.auc.pattern = "pAUC (100-90%% SE):\n%.1f%%", 
          print.auc.col = "#008600",
          print.auc.y = 40,                  # do not print auc over the previous one
          auc.polygon = TRUE, 
@@ -1549,8 +1789,9 @@ legend(x= "right", y="bottom", legend=nameVector4,
 
 ```{r , echo=FALSE}
 
-nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","RLog_Comp","RLog_13")
-dfConfMatArray <- list(confusionMatrixNET,confusionMatrixNET2,confusionMatrixGBOOST,confusionMatrixGBM,confusionMatrixAdaBoost,confusionMatrixRF,confusionMatrixNaive,confusionMatrixLOG,confusionMatrixLOG2) 
+nameVectorConf<-c("NN","NN2","XGBoost","GBM","Adaboost","R Forest","N.BAYES","RLog_Comp","RLog_13","GLM.Ens","GBM.Ens","GLM.Ens","GBM.Ens")
+dfConfMatArray <- list(confusionMatrixNET,confusionMatrixNET2,confusionMatrixGBOOST,confusionMatrixGBM,confusionMatrixAdaBoost,confusionMatrixRF,confusionMatrixNaive,confusionMatrixLOG,confusionMatrixLOG2
+  ,confusionMatrixGLM.ensemble.completo,confusionMatrixGBM.ensemble.completo,confusionMatrixGLM.ensemble,confusionMatrixGBM.ensemble) 
 accuracyArr<-c()
 kappaArr<-c()
 for (i in 1:length(dfConfMatArray)){
@@ -1579,7 +1820,7 @@ text(kappaArr, accuracyArrStr, labels=kappaArr, cex= 0.7, pos=1)
 
 ### Comparativas de tiempo
 ```{r , echo=FALSE}
-nameVectorTime<-c("GLM","NB","RF","Adaboost","GBM","XGBoost","R.Neuronal")
+nameVectorTime<-c("GLM","NB","RF","Adaboost","GBM","XGBoost","R.Neuronal","GLM.Ens","GBM.Ens")
 #png(filename = "TimeCompare.png",
 #    width = 850, height = 850,res = 130, units = "px", pointsize = 12,
 #     bg = "white")
@@ -1590,7 +1831,6 @@ axis(1,at=1:length(nameVectorTime),labels=nameVectorTime, las = 2)
 axis(2,labels=FALSE)
 
 TimeArrStr<-strtrim(as.character(arrayTiemposTrain), 6) 
-text(arrayTiemposTrain, TimeArrStr, labels=arrayTiemposTrain, cex= 0.7, pos=3)
 legend(x= "center", y="bottom", # places a legend at the appropriate place 
        c("Train","Predict"), # puts text in the legend 
 lty=c(1,1), # gives the legend appropriate symbols (lines)
@@ -1598,182 +1838,3 @@ lty=c(1,1), # gives the legend appropriate symbols (lines)
 lwd=c(2.5,2.5),col=c("blue","red")) # gives the legend lines the correct color and width
 ```
 
-### Usando caretensemble
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-trainControl <- trainControl(method="cv", number=10,
-                             savePredictions=TRUE, classProbs=TRUE)
-
-tunelist<- list(
-    glm=caretModelSpec(method="glm", tuneLength=2),
-    nb=caretModelSpec(method="nb", tuneGrid=data.frame(.fL=0,.usekernel=FALSE,.adjust=0)),
-   rf=caretModelSpec(method="rf", tuneGrid=data.frame(.mtry=2)),
-    ada=caretModelSpec(method="ada", tuneGrid=data.frame(.iter=150,.maxdepth=3,.nu=0.1)),
-    gbm=caretModelSpec(method="gbm",tuneGrid=data.frame(.n.trees=100,.interaction.depth = 1,.shrinkage = 0.1,.n.minobsinnode=10)),
-    xgbTree=caretModelSpec(method="xgbTree", tuneGrid=data.frame(.nrounds = 100,.max_depth = 3,.eta = 0.1,.gamma = 1,.colsample_bytree
- = 0.7,.min_child_weight = 2,.subsample = 1)) 
-  )
-
-algorithmList <- c("glm","nb","rf","ada","gbm","xgbTree", "blackboost","parRF","knn","glmnet")
-set.seed(42)
-models <- caretEnsemble::caretList(outcome~., data=train, trControl=trainControl,methodList=algorithmList)
-results <- resamples(models)
-summary(results)
-```
-
-```{r , echo=FALSE}
-dotplot(results)
-```
-
-
-```{r , echo=FALSE}
-correlation<-modelCor(resamples(models))
-correlation
-```
-```{r , echo=FALSE}
-corrplot.mixed(correlation) 
-```
-* Vemos que existen grandes correlaciones:
-* En primer lugar, existe una gran correlacion entre RF y parRF
-* Tambien existe una gran correlacion entre glm y glmnet
-* Existe tambien muchas correlaciones entre ada y glmnet
-* Existe tambien una gran correlacion entre ada y GBM
-* Existe tambien una gran correlacion entre ada y GLM
-
-```{r , echo=FALSE}
-set.seed(42)
-trainControl <- trainControl(method="cv", number=10)
-
-greedy_ensemble <- caretEnsemble(
-  models,
-  trControl=trainControl
-  )
-#summary(greedy_ensemble)
-```
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-model_preds <- lapply(models, predict, newdata=test, type="prob")
-model_preds <- lapply(model_preds, function(x) x[,"F"])
-model_preds <- data.frame(model_preds)
-ens_preds <- predict(greedy_ensemble, newdata=test, type="prob")
-model_preds$ensemble <- ens_preds
-caTools::colAUC(model_preds, test$outcome)
-```
-
-```{r , echo=FALSE}
-gbmImp  <-varImp(greedy_ensemble)
-gbmImp 
-```
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-stack.glm <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl)
-print(stack.glm)
-```
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
-print(stack.gbm)
-```
-
-```{r warning=FALSE, , echo=FALSE}
-plot(stack.gbm)
-```
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-nnetGrid <-  expand.grid(
-  n.trees = 50,
-  interaction.depth = 1,
-  shrinkage = 0.1,
-  n.minobsinnode = 10
-)
-stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl, tuneGrid=nnetGrid)
-print(stack.gbm)
-```
-
-```{r , echo=FALSE}
-pred.GBM.ensemble <- predict(stack.gbm, test, na.action = na.pass)
-confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM.ensemble,reference=test$outcome,positive="F")
-confusionMatrixGBM
-```
-* ELiminamos ada y glm
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-trainControl <- trainControl(method="cv", number=10,classProbs=TRUE )
-
-algorithmList <- c("glm","nb","rf","gbm","xgbTree", "blackboost","knn")
-models <- caretEnsemble::caretList(outcome~., data=train, trControl=trainControl,methodList=algorithmList)
-results <- resamples(models)
-summary(results)
-```
-
-```{r , echo=FALSE}
-correlation<-modelCor(resamples(models))
-correlation
-```
-```{r , echo=FALSE}
-corrplot.mixed(correlation) 
-```
-
-```{r , echo=FALSE}
-set.seed(42)
-trainControl <- trainControl(method="cv", number=10)
-
-greedy_ensemble <- caretEnsemble(
-  models,
-  metric="Accuracy", 
-  trControl=trainControl
-  )
-#summary(greedy_ensemble)
-```
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-model_preds <- lapply(models, predict, newdata=test, type="prob")
-model_preds <- lapply(model_preds, function(x) x[,"F"])
-model_preds <- data.frame(model_preds)
-ens_preds <- predict(greedy_ensemble, newdata=test, type="prob")
-model_preds$ensemble <- ens_preds
-caTools::colAUC(model_preds, test$outcome)
-```
-
-```{r , echo=FALSE}
-gbmImp  <-varImp(greedy_ensemble)
-gbmImp 
-```
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-stack.glm <- caretStack(models, method="glm", metric="Accuracy", trControl=trainControl)
-print(stack.glm)
-```
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl)
-print(stack.gbm)
-```
-
-```{r warning=FALSE, , echo=FALSE}
-plot(stack.gbm)
-```
-
-```{r warning=FALSE, , echo=FALSE}
-set.seed(42)
-nnetGrid <-  expand.grid(
-  n.trees = 50,
-  interaction.depth = 1,
-  shrinkage = 0.1,
-  n.minobsinnode = 10
-)
-stack.gbm <- caretStack(models, method="gbm", metric="Accuracy", trControl=trainControl, tuneGrid=nnetGrid)
-print(stack.gbm)
-```
-
-```{r , echo=FALSE}
-pred.GBM.ensemble <- predict(stack.gbm, test)
-confusionMatrixGBM<-caret::confusionMatrix(data=pred.GBM.ensemble,reference=test$outcome)
-confusionMatrixGBM
-```

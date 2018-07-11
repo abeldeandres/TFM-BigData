@@ -31,13 +31,23 @@ library(reshape) #random forest
 library(corpcor) #correlaciones parciales
 library(MASS) #Stepwise
 library(caret)
+library(klaR)
+library(MASS)
 
 set.seed(42)
 rm(list = ls())
 final <- read.csv("C:/Users/Abel de Andrés Gómez/OneDrive/TFM/TraumaticData.csv",na.strings=c("","NA"))
+#Max-Min Normalization
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+final<-as.data.frame(lapply(final, normalize))
+#final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
 ```
 * Se ha realizado un diagrama de caja para el conjunto de nuestro dataset
 ```{r , echo=FALSE}
+
 boxplot(final,las = 2)
 ```
 * Nos hemos dado cuenta que existen numerosos datos anomalos "Outliers" en la variable de edad.
@@ -52,6 +62,7 @@ outliers<-outliers$out
 outliers
 ```
   * Antes de proceder a eliminar los datos anomalos, vamos a ver la correlacion existente con la variable de *"Outcome"*:
+  
 ```{r , echo=FALSE}
 cor(final$age, final$outcome, method=c("pearson"))
 ```
@@ -133,19 +144,29 @@ plot(density(final$outcome))
 
   * Como podemos comprobar, al tratarse de variables discretas (excepto la variable de edad -*age*-), no lograremos conseguir una distribucion normal de forma individual.
   * Otro aspecto a tener en cuenta es que para que un conjunto de datos (teniendo en cuenta todas las variables) posea una distribucion normal, es necesario que todas las variables verifiquen normalidad univariante, ya que es una condicion necesaria (aunque no suficiente). Por lo tanto rechazamos la hipotesis de normalidad del conjunto de datos. 
+  
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
+Anderson_Darling_df <- function(df, bonf= TRUE, alpha= 0.05) {
+  l <- lapply(df, ad.test)
+  s <- do.call("c", lapply(l, "[[", 1))
+  p <- do.call("c", lapply(l, "[[", 2))
+  return(list(statistic= s,
+              p.value= p,
+              method= ifelse(bonf == TRUE, "Anderson-Darling normality test",
+                             "Anderson-Darling normality test")))
+}
+Anderson_Darling_df(final)
+```
   * Aún así, comprobaremos los resultados obtenidos mediante el Test de normalidad de Mardia:
 
-```{r , echo=FALSE}
-
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
 mardia(final)
-
-
 ```
   * Tambien vamos a utilizar el test de Henze-Zirkler:
-```{r  , echo=FALSE}
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
 h<-HZ.test(final, qqplot = TRUE)
 ```
-```{r , echo=FALSE}
+```{r eval=FALSE, , echo=FALSE, include=FALSE}
 h
 ```
   * Como se puede comprobar, al ser el p-value menor de 0.05 en ambos test, los datos no se ajustan a una distribución normal.
@@ -257,34 +278,12 @@ correlacionesconoutcome(final,14)
 
 * En cada paso (nodo) se recalcula el conjunto de **"m"** predictores permitidos. Lo más típico es elegir la raiz cuadrada del numero total de variables.En nuestro caso, contamos con un total de 13 variables, por lo que se escogerian 4 variables (redondeando hacia arriba en caso de no ser un número entero) en el caso de **árboles de clasificación** y **m=p/3** en el caso de **árboles de regresión**. Siendo **"p"** el numero de variables.
 
-* Aun asi, es necesario calcular la variable **"mtry"**, puesto que es el único parámetro ajustable al cual los bosques aleatorios son algo sensibles. El "mtry" es el número de variables aleatorias utilizadas en cada árbol. La reduccion del "mtry" reduce tanto la correlación como la fuerza, aumentando ambas en caso contrario.
-
-* En algún punto intermedio hay un rango "óptimo" de "mtry", generalmente bastante ancho.Usando la tasa de error de OOB, se puede encontrar rápidamente un valor de mínimo en el rango.
-
-```{r , echo=FALSE, include=FALSE}
-mtry=tuneRF(x = final,       # data set de entrenamiento 
-       y = final$outcome,  # variable a predecir
-       mtryStart  = 1,   # cantidad de variables inicial 
-       stepFactor = 2,   # incremento de variables
-       ntreeTry   = 500, # cantidad arboles a ejecutar en cada iteracion
-       improve    = .01  # mejora minina del OOB para seguir iteraciones
-      )
-best.m <- mtry[mtry[, 2] == min(mtry[, 2]), 1]
-```
-
-```{r , echo=FALSE}
-plot(mtry,type="o")
-```
-
-```{r , echo=FALSE}
-print(mtry)
-```
 
 * Como se puede comprobar, el error OOB, se estabiliza, indicando cuantas particiones se deben realizar para obtener los mejores resultados En este caso, con **4 variables sería suficiente** (puesto que es el numero donde se estabiliza el error OOB).
 
-* Las variables mas importantes utilizando el "mtry" son las siguientes:
+* Las variables mas importantesson las siguientes:
 ```{r , echo=FALSE, include=FALSE}
-fit=randomForest(outcome~.,data=final,importance=T,ntree=500, mtry=best.m)
+fit=randomForest(outcome~.,data=final,importance=T)
 #(VI_F=importance(fit))
 #Creamos un objeto con las "importancias" de las variables
 importancia=data.frame(importance(fit))
@@ -306,26 +305,9 @@ importancia
 varImpPlot(fit)
 ```
 
-
-* A continuacion se va a utilizar un arbol de clasificación, que nos mostrara la importancia de las variables segun este algoritmo de clasificacion.
-
-```{r , echo=FALSE}
-fitpart=rpart(outcome ~.,
-          data=final,parms = list(split = "gini"),maxdepth= 10)
-rpart.plot(fitpart, type=4)
-```
-
-```{r , echo=FALSE}
-fitpart
-```
-
-* Si recordamos, un resultado en el *"outcome"* de 0 eran aquellos pacientes que a los 6 meses habian vivido mientras quen un resultado de 1, significaba que los pacientes fallecian.Teniendo en cuenta este dato, podemos observar que los nodos del arbol son aquellas variables que el algoritmo considera mas relevantes y que hacen que un paciente viva o fallezca.
-
-* La interpretacion que se da al arbol es la siguiente: Cada nodo contiene el porcentaje de informacion que contiene ademas de la media de la variable *"outcome"* en cada particion. Por ejemplo, la media de *"outcome"* es de 0.4, que coincide con el 0.4 del nodo raiz. Sin embargo, cuando la variable *"motor"* es mayor de 4.5, entonces el numero de datos se reduce al 64% y la media de *"outcome"* se vuelve a 0.26, significando para este caso que la mayoria de los pacientes viven, puesto que se aproxima a 0.
-
 * Como conclusiones, utilizaremos las variables que se han considerado como mas importantes en el algoritmo del arbol de clasificacion y son las siguientes: *"motor"*,*"age"*, *"pupils"*,*"verbal"* y *"mdls"*.
 
-## Uso del método de regresión paso a paso (Stepwise Regression)
+## Uso del método de regresión paso a paso (Stepwise Fordward)
 
 * Este método es uno de los que se utilizan en la seleccion algoritmica del modelo. Se utiliza para identificar aquellas variables que se deberan integrar o no en los modelos a estudiar.
 
@@ -345,35 +327,14 @@ step$anova
 ```
 * Una vez mas podemos comprobar que las variables de *"cause"* y *"sex"* son las que se descartan usando este algoritmo.
 
-* A continuación se va a utilizar la funcion train() del paquete caret que proporciona un flujo de trabajo sencillo para realizar selecciones paso a paso. Para esta prueba se ha utilizado la validacion cruzada con 10 iteraciones para estimar el error promedio de predicción (RMSE) de cada uno de los modelos. La métrica estadística RMSE se usa para comparar los modelos y elegir automáticamente el mejor, donde el mejor se define como el modelo que minimiza el RMSE.
-
-* Se ha utilizado el parametro "nvmax" que corresponde al número máximo de predictores que se incorporarán en el modelo. Nosotros hemos utilizado todos.
-
-* El parametro "nvmax" busca el mejor modelo de 1 variable, el mejor modelo de 2 variables, de 3, etc.
+* A continuación se va a utilizar la funcion greedy.wilks() del paquete klaR que proporciona un flujo de trabajo sencillo para realizar selecciones paso a paso. El modelo inicial se define comenzando por la variable que mejor clasifica a la clase. Despues, el modelo se amplía incluyendo otras variables según el criterio lambda de Wilk.
 
 ```{r , echo=FALSE, include=FALSE}
 set.seed(42)
-# Set up repeated k-fold cross-validation
-train.control <- trainControl(method = "cv", number = 10)
-# Train the model
-step.model <- train(outcome ~., data = final,
-                    method = "leapSeq", 
-                    tuneGrid = data.frame(nvmax = 1:13),
-                    trControl = train.control
-                    )
-
+final$outcome<-as.factor(ifelse(final$outcome == "1", "F", "V"))
+gw_obj <-greedy.wilks(outcome ~., data = final)
+print(gw_obj)
 ```
-
-* A continuacion el numero de variables que se utilizan para construir el mejor modelo.
-```{r , echo=FALSE}
-step.model$bestTune
-```
-
-* Por ultimo mostramos todos los modelos creados utilizando la funcion summary().
-```{r , echo=FALSE}
-summary(step.model$finalModel)
-```
-* Un asterisco especifica que la variable dada se incluye en el modelo correspondiente.
 
 * Vemos que el mejor modelo contendria 11 variables y seria aquel que tendria en cuenta todos los predictores menos los predictores "sex" y "cause" como era de esperar.
 

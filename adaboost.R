@@ -30,19 +30,23 @@ ind<-sample.split(Y=final$outcome,SplitRatio =0.7)
 train <- final[ind,]
 test <- final[!ind,]
 
-
+nnetGrid <-  expand.grid(
+  iter = seq(from = 1, to = 200, by = 10),
+  maxdepth = seq(from = 1, to = 10, by = 1),
+  nu = seq(from = 0.1, to = 0.4, by = 0.1)
+  )
 
 trainControl <- trainControl(method="cv", number=10)
 metric <- "Accuracy"
 rfRandom <- train(outcome~., data=train, method="ada", 
-                  trControl=trainControl,metric=metric)
+                  trControl=trainControl,metric=metric,tuneGrid = nnetGrid)
 print(rfRandom)
 plot(rfRandom)
 
 
 
 
-model.ada<-ada(outcome~.,data=train,iter=150,nu=0.1,control=rpart.control(maxdepth=2))
+model.ada<-ada(outcome~.,data=train,iter=141,nu=0.3,control=rpart.control(maxdepth=1))
 
 print(model.ada)
 plot(model.ada)
